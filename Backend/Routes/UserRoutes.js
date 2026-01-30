@@ -4,7 +4,6 @@ const router = express.Router();
 // Import controller
 const userController = require('../Controller/UserController');
 
-
 // Login
 router.post('/Login', userController.LoginUser);
 
