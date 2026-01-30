@@ -24,7 +24,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6 py-28 gap-12 text-gray-600 md:flex md:px-8">
           {/* Left */}
           <div
-            onClick={() => navigate("/signup")}
+            onClick={() => navigate("/register")}
             className="flex-none space-y-5 max-w-xl"
           >
             <a

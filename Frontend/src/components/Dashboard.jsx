@@ -1,11 +1,13 @@
 import React from "react";
 import { Home, BellIcon, UserCircleIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import Sidebar from "../../layouts/Sidebar";
+import Sidebar from "../layouts/Sidebar";
+import Chart from "../layouts/Chart";
 
 const Dashboard = () => {
   return (
     <div className="h-screen flex flex-col">
+      {/* HEADER */}
       <header className="h-16 bg-white border-b flex items-center justify-between px-6">
         <span className="text-xl font-semibold">
           <span className="font-bold">Stock</span>
@@ -13,7 +15,9 @@ const Dashboard = () => {
         </span>
 
         <div className="flex items-center space-x-6 text-sm font-medium text-gray-700">
-          <Home size={18} />
+          <NavLink to="/">
+            <Home size={18} />
+          </NavLink>
 
           <NavLink to="#" className="hover:text-blue-600 transition">
             Watchlist
@@ -30,7 +34,7 @@ const Dashboard = () => {
               size={18}
               className="text-gray-600 hover:text-blue-600 transition"
             />
-            <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+            <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
           </button>
 
           <UserCircleIcon
@@ -40,14 +44,31 @@ const Dashboard = () => {
         </div>
       </header>
 
+      {/* BODY */}
       <div className="flex flex-1 bg-gray-100">
-        <Sidebar className="hidden md:block" />
+        <Sidebar />
 
-        <main className="flex-1 p-6">
-          <h1 className="text-xl font-semibold text-gray-700">
-            Market Overview
-          </h1>
-          {/* main content goes here */}
+        <main className="flex-1 flex flex-col">
+          {/* TOP BAR INSIDE MAIN */}
+          <div className="h-14 px-6 flex items-center justify-between border-b bg-white">
+            <h1 className="text-lg font-semibold text-gray-700">
+              Market Overview
+            </h1>
+
+            <div className="flex gap-3">
+              <button className="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition font-semibold">
+                Buy
+              </button>
+              <button className="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition font-semibold">
+                Sell
+              </button>
+            </div>
+          </div>
+
+          {/* CHART AREA */}
+          <div className="flex-1 p-4">
+            <Chart />
+          </div>
         </main>
       </div>
     </div>
