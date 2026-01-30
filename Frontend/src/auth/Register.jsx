@@ -1,8 +1,56 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { authAPI } from '../services/api'
 
 const Register = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate()
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+  })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    })
+    setError('') // Clear error when user types
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    // Basic validation
+    if (!formData.name || !formData.email || !formData.password) {
+      setError('All fields are required')
+      setLoading(false)
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long')
+      setLoading(false)
+      return
+    }
+
+    try {
+      const response = await authAPI.signup(formData)
+      console.log('Registration successful:', response)
+      // Redirect to login after successful registration
+      navigate('/login')
+    } catch (err) {
+      setError(err.error || 'Registration failed. Please try again.')
+      console.error('Registration error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-stretch bg-white">
       {/* Left side: text + image space */}
@@ -38,19 +86,27 @@ const Register = () => {
             Register for Simulator
           </h2>
 
-          <form className="space-y-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-sm text-sm">
+              {error}
+            </div>
+          )}
 
-          <div className="space-y-2">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
               <label className="block text-sm font-semibold text-slate-800">
                 Username
               </label>
               <input
                 type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
                 placeholder="Enter a Username"
                 className="w-full border border-slate-300 rounded-none px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
               />
             </div>
-
 
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-slate-800">
@@ -58,8 +114,12 @@ const Register = () => {
               </label>
               <input
                 type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
                 placeholder="Enter Your Email Address"
                 className="w-full border border-slate-300 rounded-none px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
               />
             </div>
 
@@ -69,8 +129,12 @@ const Register = () => {
               </label>
               <input
                 type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
                 placeholder="Enter Your Password"
                 className="w-full border border-slate-300 rounded-none px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
               />
             </div>
 
@@ -84,9 +148,10 @@ const Register = () => {
 
             <button
               type="submit"
-              className="w-48 mx-auto block rounded-full bg-[#f9f904] text-black font-semibold tracking-[0.18em] text-xs px-6 py-3 uppercase"
+              disabled={loading}
+              className="w-48 mx-auto block rounded-full bg-[#f9f904] text-black font-semibold tracking-[0.18em] text-xs px-6 py-3 uppercase disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Register
+              {loading ? 'Registering...' : 'Register'}
             </button>
 
             <div className="flex items-center justify-center gap-4 text-xs text-slate-400">
