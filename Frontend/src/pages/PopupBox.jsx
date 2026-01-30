@@ -157,9 +157,9 @@ const PopupBox = ({ stockName, orderType, onClose, onConfirm }) => {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={handleNo}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded  transition"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded  transition"
               >
-                Cancel
+                Sell
               </button>
               <button
                 onClick={handleSubmit}
