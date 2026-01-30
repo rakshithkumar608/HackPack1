@@ -5,16 +5,33 @@ import { NavLink } from "react-router-dom";
 import Sidebar from "../layouts/Sidebar";
 import Chart from "../layouts/Chart";
 
+const STOCK_IDS = {
+  "RELIANCE.BSE": "697cba312f464eddee194a8c",
+  "TCS.BSE": "697cbbc0c4c03242cb8ec328",
+  "HDFCBANK.BSE": "697cbbe4d2dccf79df8f924f",
+  "ICICIBANK.BSE": "697cbc1c92a7f59650aca36a",
+  "SBIN.BSE": "697cbc41c29e289a7bd24e48",
+};
+
 const Dashboard = () => {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const chartRef = useRef(null);
   const streamIndexRef = useRef(0);
   const allPricesRef = useRef([]);
 
+  const [selectedStock, setSelectedStock] = useState("RELIANCE.BSE");
+
   useEffect(() => {
-    const stockId = "697cbbc0c4c03242cb8ec328";
+    const stockId = STOCK_IDS[selectedStock];
+    if (!stockId) {
+      setError("Stock ID not found ");
+      setChartData([]);
+      setLoading(false);
+      return;
+    }
 
     const fetchData = async () => {
       try {
@@ -26,15 +43,14 @@ const Dashboard = () => {
         );
 
         console.log("Backend response:", response.data);
-      
+
         const data = response.data;
-        console.log("🌹🌹🌹 Data",response.data[0])
-         
+        console.log("🌹🌹🌹 Data", response.data[0]);
+
         if (!Array.isArray(data) || data.length === 0) {
           throw new Error("Invalid data format from backend");
         }
 
-        // Transform backend data → chart format
         const formatted = [];
         let timeCounter = 1642425322;
 
@@ -47,7 +63,7 @@ const Dashboard = () => {
                   time: timeCounter,
                   value: numPrice,
                 });
-                timeCounter += 3600; // 1 hour gap
+                timeCounter += 3600;
               }
             });
           }
@@ -59,14 +75,14 @@ const Dashboard = () => {
 
         console.log("✅ Formatted chart points:", formatted.length);
         allPricesRef.current = formatted;
-        
+
         // Set initial data (first 10 points)
         const initialData = formatted.slice(0, 10);
         setChartData(initialData);
         streamIndexRef.current = 10;
-      } catch (err) {
-        console.error("❌ Axios error:", err);
 
+        setChartData(formatted);
+      } catch (err) {
         if (err.response) {
           setError(`Server error: ${err.response.status}`);
         } else if (err.request) {
@@ -80,7 +96,7 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, []);
+  }, [selectedStock]);
 
   // Stream data one by one every 500ms (faster)
   useEffect(() => {
@@ -89,7 +105,7 @@ const Dashboard = () => {
     const interval = setInterval(() => {
       if (streamIndexRef.current < allPricesRef.current.length) {
         const nextPoint = allPricesRef.current[streamIndexRef.current];
-        
+
         // Add to chart via ref
         if (chartRef.current) {
           chartRef.current.addPrice({
@@ -135,13 +151,23 @@ const Dashboard = () => {
       </header>
 
       <div className="flex flex-1 bg-gray-100">
-        <Sidebar className="hidden md:block" />
+        <Sidebar
+          className="hidden md:block text-3xl font-bold"
+          onStockSelect={(name) => setSelectedStock(name)}
+          selected={selectedStock}
+        />
 
         <main className="flex-1 p-6 flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-semibold text-gray-700">
-              Market Overview
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-semibold text-gray-700">
+                Market Overview
+              </h1>
+
+              <div className="text-2xl text-gray-600 bg-gray-100 px-3 py-1 rounded-md ">
+                {selectedStock}
+              </div>
+            </div>
 
             <div className="flex gap-3">
               <button className="px-4 py-2 bg-green-600 text-white rounded">
@@ -159,7 +185,8 @@ const Dashboard = () => {
             {!loading && !error && chartData.length > 0 && (
               <>
                 <div className="text-sm text-gray-600 mb-2">
-                  📊 Live Streaming: {streamIndexRef.current} / {allPricesRef.current.length} points
+                  📊 Live Streaming: {streamIndexRef.current} /{" "}
+                  {allPricesRef.current.length} points
                 </div>
                 <Chart ref={chartRef} data={chartData} />
               </>
