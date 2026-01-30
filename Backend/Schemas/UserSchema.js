@@ -37,6 +37,12 @@ const userSchema = new mongoose.Schema({
     ref: 'Xp',
     default: null
   },
+
+  availableBalance: {
+    type: Number,
+    default: 100000, // Starting balance of 1 lakh
+    min: [0, 'Balance cannot be negative']
+  },
   
     orders: [
     {

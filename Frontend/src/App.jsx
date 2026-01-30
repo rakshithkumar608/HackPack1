@@ -4,6 +4,7 @@ import LandingPage from './components/LandingPage'
 import Login from './auth/Login'
 import Register from './auth/Register'
 import Dashboard from './components/Dashboard'
+import Portfolio from './pages/Portfolio'
 
 
 const App = () => {
@@ -13,8 +14,9 @@ const App = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path='/dashboard' element={<Dashboard />}/>
-       
+        <Route path='/dashboard' element={<Dashboard />} />
+        <Route path='/portfolio' element={<Portfolio />} />
+
       </Routes>
     </Router>
   )

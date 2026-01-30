@@ -21,10 +21,50 @@ const Dashboard = () => {
   const [selectedStock, setSelectedStock] = useState("RELIANCE.BSE");
   const [showPopup, setShowPopup] = useState(false);
   const [orderType, setOrderType] = useState(null); // "buy" or "sell"
+  const [availableBalance, setAvailableBalance] = useState(0);
+  const [ownedShares, setOwnedShares] = useState(0);
+  const [avgBuyPrice, setAvgBuyPrice] = useState(0);
 
   const chartRef = useRef(null);
   const streamIndexRef = useRef(0);
   const allPricesRef = useRef([]);
+
+  // Fetch user balance
+  const fetchBalance = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/orders/balance",
+        { withCredentials: true }
+      );
+      setAvailableBalance(response.data.availableBalance || 0);
+    } catch (err) {
+      console.error("Error fetching balance:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchBalance();
+  }, []);
+
+  // Fetch shares owned for selected stock
+  const fetchHolding = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/orders/holding/${selectedStock}`,
+        { withCredentials: true }
+      );
+      setOwnedShares(response.data.ownedQuantity || 0);
+      setAvgBuyPrice(response.data.avgPrice || 0);
+    } catch (err) {
+      console.error("Error fetching holding:", err);
+      setOwnedShares(0);
+      setAvgBuyPrice(0);
+    }
+  };
+
+  useEffect(() => {
+    fetchHolding();
+  }, [selectedStock]);
 
   useEffect(() => {
     const stockId = STOCK_IDS[selectedStock];
@@ -133,12 +173,49 @@ const Dashboard = () => {
     setShowPopup(true);
   };
 
-  const handleOrderConfirm = (orderData) => {
-    console.log("Order placed:", orderData);
-    // Send to backend or process order here
-    alert(
-      `${orderData.orderType.toUpperCase()} order placed:\n${orderData.quantity} units of ${orderData.stockName} @ ₹${orderData.price}`,
-    );
+  const handleOrderConfirm = async (orderData) => {
+    console.log("Order data:", orderData);
+
+    // Determine endpoint based on order type
+    const endpoint = orderData.orderType === "sell"
+      ? "http://localhost:5000/api/orders/sell"
+      : "http://localhost:5000/api/orders/buy";
+
+    try {
+      const response = await axios.post(
+        endpoint,
+        {
+          symbol: orderData.stockName,
+          orderQuantity: orderData.quantity,
+          price: orderData.price
+        },
+        {
+          withCredentials: true // Send cookies with request
+        }
+      );
+
+      alert(
+        `✅ ${orderData.orderType.toUpperCase()} order placed!\n${orderData.quantity} units of ${orderData.stockName} @ ₹${orderData.price}\nNew Balance: ₹${response.data.newBalance?.toLocaleString("en-IN") || "N/A"}`
+      );
+
+      // Refresh balance and holdings after order
+      fetchBalance();
+      fetchHolding();
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to place order";
+      const available = error.response?.data?.available;
+      const required = error.response?.data?.required;
+      const owned = error.response?.data?.owned;
+      const requested = error.response?.data?.requested;
+
+      if (owned !== undefined) {
+        alert(`❌ ${errorMsg}\nRequested: ${requested} shares\nOwned: ${owned} shares`);
+      } else if (available !== undefined) {
+        alert(`❌ ${errorMsg}\nRequired: ₹${required?.toLocaleString("en-IN")}\nAvailable: ₹${available?.toLocaleString("en-IN")}`);
+      } else {
+        alert(`❌ ${errorMsg}`);
+      }
+    }
   };
 
   return (
@@ -150,12 +227,16 @@ const Dashboard = () => {
         </span>
 
         <div className="flex items-center space-x-6 text-sm font-medium text-gray-700">
+          <div className="bg-green-100 text-green-800 px-3 py-1 rounded-lg font-semibold">
+            ₹{availableBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+          </div>
+
           <NavLink to="/">
             <Home size={18} />
           </NavLink>
 
           <NavLink to="#">Watchlist</NavLink>
-          <NavLink to="#">Portfolio</NavLink>
+          <NavLink to="/portfolio">Portfolio</NavLink>
           <NavLink to="#">Orders</NavLink>
 
           <button className="relative">
@@ -183,6 +264,28 @@ const Dashboard = () => {
 
               <div className="text-2xl text-gray-600 bg-gray-100 px-3 py-1 rounded-md">
                 {selectedStock}
+              </div>
+            </div>
+
+            {/* Holdings & Balance Info Panel */}
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+                <div className="text-xs text-blue-600 font-medium">You Own</div>
+                <div className="text-lg font-bold text-blue-800">
+                  {ownedShares} shares
+                </div>
+                {avgBuyPrice > 0 && (
+                  <div className="text-xs text-blue-500">
+                    Avg: ₹{avgBuyPrice.toFixed(2)}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+                <div className="text-xs text-green-600 font-medium">Available</div>
+                <div className="text-lg font-bold text-green-800">
+                  ₹{availableBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </div>
               </div>
             </div>
 

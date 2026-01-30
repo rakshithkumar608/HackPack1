@@ -4,10 +4,11 @@ const User = require('../Schemas/UserSchema');
 
 const buyOrder = async (req, res) => {
   try {
-    const { userId, symbol, orderQuantity, price } = req.body;
+    const { symbol, orderQuantity, price } = req.body;
+    const userId = req.user._id; // From auth middleware
 
-    if (!userId || !symbol || !orderQuantity || !price) {
-      return res.status(400).json({ message: 'userId, symbol, orderQuantity and price are required' });
+    if (!symbol || !orderQuantity || !price) {
+      return res.status(400).json({ message: 'symbol, orderQuantity and price are required' });
     }
 
     const qty = Number(orderQuantity);
@@ -15,9 +16,22 @@ const buyOrder = async (req, res) => {
     if (!Number.isFinite(qty) || qty <= 0) return res.status(400).json({ message: 'orderQuantity must be a positive number' });
     if (!Number.isFinite(pr) || pr < 0) return res.status(400).json({ message: 'price must be a non-negative number' });
 
-    // Verify user exists
+    // Calculate total cost
+    const totalCost = qty * pr;
+
+    // Get user (already verified by middleware, but need fresh data for balance)
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Check if user has sufficient balance
+    const currentBalance = user.availableBalance || 0;
+    if (currentBalance < totalCost) {
+      return res.status(400).json({ 
+        message: 'Insufficient balance',
+        required: totalCost,
+        available: currentBalance
+      });
+    }
 
     // Create order document
     const order = new Order({
@@ -26,24 +40,226 @@ const buyOrder = async (req, res) => {
       symbol: String(symbol).trim().toUpperCase(),
       price: pr,
       orderType: 'BUY',
-      status: 'COMPLETED'
+      totalAmount: totalCost
     });
 
     await order.save();
 
-    // Push order reference to user's orders array
+    // Deduct balance and push order reference to user's orders array
+    user.availableBalance = currentBalance - totalCost;
     user.orders = user.orders || [];
     user.orders.push(order._id);
     await user.save();
 
-    return res.status(201).json({ message: 'Buy order created', order });
+    return res.status(201).json({ 
+      message: 'Buy order created', 
+      order,
+      newBalance: user.availableBalance
+    });
   } catch (err) {
     console.error('buyOrder error:', err);
     return res.status(500).json({ message: 'Server error', details: err.message });
   }
 };
 
-module.exports = {
-  buyOrder,
+const sellOrder = async (req, res) => {
+  try {
+    const { symbol, orderQuantity, price } = req.body;
+    const userId = req.user._id; // From auth middleware
+
+    if (!symbol || !orderQuantity || !price) {
+      return res.status(400).json({ message: 'symbol, orderQuantity and price are required' });
+    }
+
+    const qty = Number(orderQuantity);
+    const pr = Number(price);
+    const symbolUpper = String(symbol).trim().toUpperCase();
+
+    if (!Number.isFinite(qty) || qty <= 0) return res.status(400).json({ message: 'orderQuantity must be a positive number' });
+    if (!Number.isFinite(pr) || pr < 0) return res.status(400).json({ message: 'price must be a non-negative number' });
+
+    // Get user
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Calculate how many shares the user owns of this symbol
+    const userOrders = await Order.find({ userId, symbol: symbolUpper });
+    let ownedQuantity = 0;
+    userOrders.forEach(order => {
+      if (order.orderType === 'BUY') {
+        ownedQuantity += order.orderQuantity;
+      } else if (order.orderType === 'SELL') {
+        ownedQuantity -= order.orderQuantity;
+      }
+    });
+
+    // Check if user owns enough shares to sell
+    if (ownedQuantity < qty) {
+      return res.status(400).json({ 
+        message: 'Insufficient shares to sell',
+        requested: qty,
+        owned: ownedQuantity
+      });
+    }
+
+    // Calculate sale value
+    const saleValue = qty * pr;
+
+    // Create sell order document
+    const order = new Order({
+      userId: user._id,
+      orderQuantity: qty,
+      symbol: symbolUpper,
+      price: pr,
+      orderType: 'SELL',
+      totalAmount: saleValue
+    });
+
+    await order.save();
+
+    // Add sale value to balance and push order reference
+    const currentBalance = user.availableBalance || 0;
+    user.availableBalance = currentBalance + saleValue;
+    user.orders = user.orders || [];
+    user.orders.push(order._id);
+    await user.save();
+
+    return res.status(201).json({ 
+      message: 'Sell order created', 
+      order,
+      newBalance: user.availableBalance
+    });
+  } catch (err) {
+    console.error('sellOrder error:', err);
+    return res.status(500).json({ message: 'Server error', details: err.message });
+  }
 };
 
+const getBalance = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.status(200).json({
+      availableBalance: user.availableBalance || 100000,
+      name: user.name,
+      email: user.email
+    });
+  } catch (err) {
+    console.error('getBalance error:', err);
+    return res.status(500).json({ message: 'Server error', details: err.message });
+  }
+};
+
+const getHolding = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { symbol } = req.params;
+    
+    if (!symbol) {
+      return res.status(400).json({ message: 'Symbol is required' });
+    }
+
+    const symbolUpper = String(symbol).trim().toUpperCase();
+    
+    // Get all orders for this symbol
+    const orders = await Order.find({ userId, symbol: symbolUpper });
+    
+    // Calculate net quantity owned
+    let ownedQuantity = 0;
+    let totalInvested = 0;
+    
+    orders.forEach(order => {
+      if (order.orderType === 'BUY') {
+        ownedQuantity += order.orderQuantity;
+        totalInvested += order.totalAmount || (order.orderQuantity * order.price);
+      } else if (order.orderType === 'SELL') {
+        ownedQuantity -= order.orderQuantity;
+        totalInvested -= order.totalAmount || (order.orderQuantity * order.price);
+      }
+    });
+
+    const avgPrice = ownedQuantity > 0 ? totalInvested / ownedQuantity : 0;
+
+    return res.status(200).json({
+      symbol: symbolUpper,
+      ownedQuantity,
+      totalInvested,
+      avgPrice
+    });
+  } catch (err) {
+    console.error('getHolding error:', err);
+    return res.status(500).json({ message: 'Server error', details: err.message });
+  }
+};
+
+const getPortfolio = async (req, res) => {
+  try {
+    const userId = req.user._id; // From auth middleware
+
+    // Get all orders for the user
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+
+    // Aggregate holdings by symbol
+    const holdings = {};
+    orders.forEach(order => {
+      if (!holdings[order.symbol]) {
+        holdings[order.symbol] = {
+          symbol: order.symbol,
+          totalQuantity: 0,
+          totalInvested: 0,
+          avgPrice: 0,
+          orders: []
+        };
+      }
+
+      if (order.orderType === 'BUY') {
+        holdings[order.symbol].totalQuantity += order.orderQuantity;
+        holdings[order.symbol].totalInvested += order.totalAmount;
+      } else if (order.orderType === 'SELL') {
+        holdings[order.symbol].totalQuantity -= order.orderQuantity;
+        holdings[order.symbol].totalInvested -= order.totalAmount;
+      }
+
+      holdings[order.symbol].orders.push({
+        id: order._id,
+        type: order.orderType,
+        quantity: order.orderQuantity,
+        price: order.price,
+        total: order.totalAmount,
+        date: order.createdAt
+      });
+    });
+
+    // Calculate average price for each holding
+    Object.values(holdings).forEach(holding => {
+      if (holding.totalQuantity > 0) {
+        holding.avgPrice = holding.totalInvested / holding.totalQuantity;
+      }
+    });
+
+    // Convert to array and filter out zero holdings
+    const portfolioData = Object.values(holdings).filter(h => h.totalQuantity > 0);
+
+    return res.status(200).json({
+      message: 'Portfolio fetched successfully',
+      portfolio: portfolioData,
+      totalOrders: orders.length
+    });
+  } catch (err) {
+    console.error('getPortfolio error:', err);
+    return res.status(500).json({ message: 'Server error', details: err.message });
+  }
+};
+
+module.exports = {
+  buyOrder,
+  sellOrder,
+  getBalance,
+  getHolding,
+  getPortfolio,
+};
