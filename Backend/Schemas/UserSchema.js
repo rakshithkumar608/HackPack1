@@ -32,10 +32,24 @@ const userSchema = new mongoose.Schema({
     default: Date.now
   },
 
+  xpProfile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Xp',
+    default: null
+  },
+  
+    orders: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Order'
+    }
+  ]
+
+
 });
 
 // Pre-save middleware to update the updatedAt field
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function(next) {                                                 
   this.updatedAt = Date.now();
   next();
 });

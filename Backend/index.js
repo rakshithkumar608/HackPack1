@@ -4,6 +4,7 @@ const cors = require('cors');
 const app = express();
 const userRoutes = require('./Routes/UserRoutes');
 const DataRoutes = require('./Routes/DataAccess');
+const OrderRoutes = require('./Routes/OrderRoutes');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const PORT = process.env.PORT || 5000;
@@ -25,6 +26,7 @@ app.use(cookieParser());
 // Use routes with a base path
 app.use('/api/users', userRoutes);
 app.use('/api/trading', DataRoutes);
+app.use('/api/orders', OrderRoutes);
 
 
 app.get('/health', (req, res) => {
