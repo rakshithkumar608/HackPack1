@@ -9,8 +9,8 @@ const Navbar = () => {
       <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
         {/* Logo + text */}
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">i</span>
+          <div className="h-8 w-8 rounded-full  flex items-center justify-center">
+            {/* <span className="text-white font-bold text-lg">i</span> */}
           </div>
           <span className="text-xl font-semibold tracking-tight">
             <span className="font-bold">Stock</span>

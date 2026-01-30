@@ -129,6 +129,7 @@ const Login = () => {
 
             <button
               type="submit"
+              onClick={() => navigator("/dashboard")}
               disabled={loading}
               className="w-48 mx-auto block rounded-full bg-[#f9f904] text-black font-semibold tracking-[0.18em] text-xs px-6 py-3 uppercase disabled:opacity-50 disabled:cursor-not-allowed"
             >
