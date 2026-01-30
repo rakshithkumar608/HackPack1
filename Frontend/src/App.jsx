@@ -5,6 +5,7 @@ import Login from './auth/Login'
 import Register from './auth/Register'
 import Dashboard from './components/Dashboard'
 import Portfolio from './pages/Portfolio'
+import Leaderboard from './pages/Leaderboard'
 
 
 const App = () => {
@@ -16,7 +17,7 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path='/dashboard' element={<Dashboard />} />
         <Route path='/portfolio' element={<Portfolio />} />
-
+        <Route path='/leaderboard' element={<Leaderboard />} />
       </Routes>
     </Router>
   )

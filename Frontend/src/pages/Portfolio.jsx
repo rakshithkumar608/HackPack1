@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Home, BellIcon, UserCircleIcon, TrendingUp, TrendingDown, Wallet, PieChart } from "lucide-react";
+import { Home, BellIcon, UserCircleIcon, TrendingUp, TrendingDown, Wallet, PieChart, Star, Trophy, Flame, Zap } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import LevelBadge from "../components/LevelBadge";
 
 const Portfolio = () => {
     const [portfolioData, setPortfolioData] = useState({
@@ -10,23 +11,38 @@ const Portfolio = () => {
         holdings: [],
         recentOrders: []
     });
+    const [xpStats, setXpStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const fetchPortfolio = async () => {
+        const fetchData = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(
+
+                // Fetch portfolio
+                const portfolioRes = await axios.get(
                     "http://localhost:5000/api/orders/portfolio",
                     { withCredentials: true }
                 );
                 setPortfolioData({
-                    availableBalance: response.data.availableBalance || 0,
-                    totalInvested: response.data.totalInvested || 0,
-                    holdings: response.data.holdings || [],
-                    recentOrders: response.data.recentOrders || []
+                    availableBalance: portfolioRes.data.availableBalance || 0,
+                    totalInvested: portfolioRes.data.totalInvested || 0,
+                    holdings: portfolioRes.data.holdings || [],
+                    recentOrders: portfolioRes.data.recentOrders || []
                 });
+
+                // Fetch XP stats
+                try {
+                    const xpRes = await axios.get(
+                        "http://localhost:5000/api/gamification/stats",
+                        { withCredentials: true }
+                    );
+                    setXpStats(xpRes.data.stats);
+                } catch (xpErr) {
+                    console.error("XP fetch error:", xpErr);
+                }
+
             } catch (err) {
                 console.error("Error fetching portfolio:", err);
                 setError(err.response?.data?.message || err.response?.data?.error || "Failed to fetch portfolio");
@@ -34,7 +50,7 @@ const Portfolio = () => {
                 setLoading(false);
             }
         };
-        fetchPortfolio();
+        fetchData();
     }, []);
 
     const { availableBalance, totalInvested, holdings, recentOrders } = portfolioData;
@@ -49,11 +65,13 @@ const Portfolio = () => {
                     <span className="text-blue-600 text-2xl font-bold">Learn</span>
                 </span>
 
-                <div className="flex items-center space-x-6 text-sm font-medium text-gray-700">
+                <div className="flex items-center space-x-4 text-sm font-medium text-gray-700">
                     <NavLink to="/"><Home size={18} /></NavLink>
                     <NavLink to="/dashboard">Dashboard</NavLink>
                     <NavLink to="/portfolio" className="text-blue-600 font-semibold">Portfolio</NavLink>
-                    <NavLink to="#">Orders</NavLink>
+                    <NavLink to="/leaderboard" className="flex items-center gap-1 text-purple-600">
+                        <Trophy size={16} /> Leaderboard
+                    </NavLink>
                     <button className="relative">
                         <BellIcon size={18} />
                         <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
@@ -66,14 +84,14 @@ const Portfolio = () => {
             <main className="flex-1 p-6 overflow-auto">
                 <div className="max-w-6xl mx-auto">
                     {/* Portfolio Summary Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         {/* Available Balance */}
                         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-5 text-white">
                             <div className="flex items-center gap-2 mb-2">
                                 <Wallet size={20} />
                                 <span className="text-green-100 text-sm">Available Balance</span>
                             </div>
-                            <p className="text-3xl font-bold">
+                            <p className="text-2xl font-bold">
                                 ₹{availableBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                             </p>
                         </div>
@@ -84,7 +102,7 @@ const Portfolio = () => {
                                 <PieChart size={20} />
                                 <span className="text-blue-100 text-sm">Total Invested</span>
                             </div>
-                            <p className="text-3xl font-bold">
+                            <p className="text-2xl font-bold">
                                 ₹{totalInvested.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                             </p>
                         </div>
@@ -93,11 +111,30 @@ const Portfolio = () => {
                         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-5 text-white">
                             <div className="flex items-center gap-2 mb-2">
                                 <TrendingUp size={20} />
-                                <span className="text-purple-100 text-sm">Total Portfolio Value</span>
+                                <span className="text-purple-100 text-sm">Portfolio Value</span>
                             </div>
-                            <p className="text-3xl font-bold">
+                            <p className="text-2xl font-bold">
                                 ₹{totalPortfolioValue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                             </p>
+                        </div>
+
+                        {/* XP Card */}
+                        <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg shadow-lg p-5 text-white">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Star size={20} />
+                                <span className="text-yellow-100 text-sm">Your XP</span>
+                            </div>
+                            <p className="text-2xl font-bold">
+                                {xpStats?.xpPoints || 0} XP
+                            </p>
+                            <div className="flex items-center gap-2 mt-1 text-yellow-100 text-xs">
+                                <span>Level {xpStats?.level || 1}</span>
+                                {xpStats?.loginStreak > 0 && (
+                                    <span className="flex items-center gap-1">
+                                        <Flame size={12} /> {xpStats.loginStreak} streak
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -118,7 +155,7 @@ const Portfolio = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Current Holdings */}
                         <div className="lg:col-span-2">
-                            <div className="bg-white rounded-lg shadow-md p-5">
+                            <div className="bg-white rounded-lg shadow-md p-5 mb-6">
                                 <h2 className="text-xl font-bold text-gray-800 mb-4">Current Holdings</h2>
 
                                 {!loading && !error && holdings.length === 0 && (
@@ -167,6 +204,14 @@ const Portfolio = () => {
                                     </div>
                                 )}
                             </div>
+
+                            {/* XP & Achievements Section */}
+                            <div className="bg-white rounded-lg shadow-md p-5">
+                                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <Zap className="text-yellow-500" /> XP & Achievements
+                                </h2>
+                                <LevelBadge compact={false} />
+                            </div>
                         </div>
 
                         {/* Recent Orders */}
@@ -186,8 +231,8 @@ const Portfolio = () => {
                                                 <div
                                                     key={order.id}
                                                     className={`p-3 rounded-lg border-l-4 ${isBuy
-                                                            ? "bg-green-50 border-green-500"
-                                                            : "bg-red-50 border-red-500"
+                                                        ? "bg-green-50 border-green-500"
+                                                        : "bg-red-50 border-red-500"
                                                         }`}
                                                 >
                                                     <div className="flex items-center justify-between">
@@ -211,8 +256,13 @@ const Portfolio = () => {
                                                             {order.quantity} @ ₹{order.price?.toFixed(2)}
                                                         </span>
                                                     </div>
-                                                    <div className={`text-sm font-semibold mt-1 ${isBuy ? "text-green-600" : "text-red-600"}`}>
-                                                        {isBuy ? "-" : "+"}₹{(order.total || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                                    <div className="flex items-center justify-between mt-1">
+                                                        <span className={`text-sm font-semibold ${isBuy ? "text-green-600" : "text-red-600"}`}>
+                                                            {isBuy ? "-" : "+"}₹{(order.total || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                                        </span>
+                                                        <span className="text-xs text-yellow-600 flex items-center gap-1">
+                                                            <Star size={10} /> +{isBuy ? "10" : "15"} XP
+                                                        </span>
                                                     </div>
                                                 </div>
                                             );

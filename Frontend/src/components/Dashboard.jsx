@@ -1,10 +1,11 @@
 import axios from "axios";
 import React, { useState, useEffect, useRef } from "react";
-import { Home, BellIcon, UserCircleIcon } from "lucide-react";
+import { Home, BellIcon, UserCircleIcon, Trophy } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import Sidebar from "../layouts/Sidebar";
 import Chart from "../layouts/Chart";
 import PopupBox from "../pages/PopupBox";
+import LevelBadge from "./LevelBadge";
 
 const STOCK_IDS = {
   "RELIANCE.BSE": "697cba312f464eddee194a8c",
@@ -226,7 +227,10 @@ const Dashboard = () => {
           <span className="text-blue-600 text-2xl font-bold">Learn</span>
         </span>
 
-        <div className="flex items-center space-x-6 text-sm font-medium text-gray-700">
+        <div className="flex items-center space-x-4 text-sm font-medium text-gray-700">
+          {/* Level Badge */}
+          <LevelBadge compact={true} />
+
           <div className="bg-green-100 text-green-800 px-3 py-1 rounded-lg font-semibold">
             ₹{availableBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </div>

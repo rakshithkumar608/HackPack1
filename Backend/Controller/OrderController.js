@@ -1,5 +1,6 @@
 const Order = require('../Schemas/OrderSchema');
 const User = require('../Schemas/UserSchema');
+const { awardXp, checkAchievements, getOrCreateXpProfile, XP_VALUES } = require('./GamificationController');
 
 
 const buyOrder = async (req, res) => {
@@ -51,10 +52,24 @@ const buyOrder = async (req, res) => {
     user.orders.push(order._id);
     await user.save();
 
+    // Award XP for buy order
+    let xpAwarded = XP_VALUES.BUY_ORDER;
+    try {
+      const xpProfile = await getOrCreateXpProfile(userId);
+      xpProfile.xpPoints += xpAwarded;
+      xpProfile.totalTrades += 1;
+      xpProfile.behavior_history.push(`+${xpAwarded} XP: Buy order ${symbol}`);
+      await xpProfile.save();
+      await checkAchievements(userId);
+    } catch (xpErr) {
+      console.error('XP error:', xpErr);
+    }
+
     return res.status(201).json({ 
       message: 'Buy order created', 
       order,
-      newBalance: user.availableBalance
+      newBalance: user.availableBalance,
+      xpAwarded
     });
   } catch (err) {
     console.error('buyOrder error:', err);
@@ -82,12 +97,17 @@ const sellOrder = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Calculate how many shares the user owns of this symbol
+    // Calculate how many shares the user owns of this symbol and avg buy price
     const userOrders = await Order.find({ userId, symbol: symbolUpper });
     let ownedQuantity = 0;
+    let totalBuyAmount = 0;
+    let totalBuyQty = 0;
+    
     userOrders.forEach(order => {
       if (order.orderType === 'BUY') {
         ownedQuantity += order.orderQuantity;
+        totalBuyAmount += order.totalAmount;
+        totalBuyQty += order.orderQuantity;
       } else if (order.orderType === 'SELL') {
         ownedQuantity -= order.orderQuantity;
       }
@@ -101,6 +121,10 @@ const sellOrder = async (req, res) => {
         owned: ownedQuantity
       });
     }
+
+    // Calculate average buy price and profit
+    const avgBuyPrice = totalBuyQty > 0 ? totalBuyAmount / totalBuyQty : 0;
+    const isProfitable = pr > avgBuyPrice;
 
     // Calculate sale value
     const saleValue = qty * pr;
@@ -124,10 +148,32 @@ const sellOrder = async (req, res) => {
     user.orders.push(order._id);
     await user.save();
 
+    // Award XP for sell order
+    let xpAwarded = XP_VALUES.SELL_ORDER;
+    if (isProfitable) {
+      xpAwarded += XP_VALUES.PROFITABLE_TRADE;
+    }
+    
+    try {
+      const xpProfile = await getOrCreateXpProfile(userId);
+      xpProfile.xpPoints += xpAwarded;
+      xpProfile.totalTrades += 1;
+      if (isProfitable) {
+        xpProfile.profitableTrades += 1;
+      }
+      xpProfile.behavior_history.push(`+${xpAwarded} XP: Sell order ${symbol}${isProfitable ? ' (profit!)' : ''}`);
+      await xpProfile.save();
+      await checkAchievements(userId);
+    } catch (xpErr) {
+      console.error('XP error:', xpErr);
+    }
+
     return res.status(201).json({ 
       message: 'Sell order created', 
       order,
-      newBalance: user.availableBalance
+      newBalance: user.availableBalance,
+      xpAwarded,
+      isProfitable
     });
   } catch (err) {
     console.error('sellOrder error:', err);

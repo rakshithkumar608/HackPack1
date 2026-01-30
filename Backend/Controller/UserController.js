@@ -1,6 +1,7 @@
 const User = require('../Schemas/UserSchema');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { handleLoginXp } = require('./GamificationController');
 
 
 const LoginUser = async (req, res) => {
@@ -45,9 +46,20 @@ const LoginUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
+    // Award XP for login
+    let xpData = { xpAwarded: 0, streak: 0, totalXp: 0 };
+    try {
+      xpData = await handleLoginXp(user._id);
+    } catch (xpError) {
+      console.error('XP award error:', xpError);
+    }
+
     res.json({
       message: 'Login successful',
       token: token,
+      xpAwarded: xpData.xpAwarded,
+      loginStreak: xpData.streak,
+      totalXp: xpData.totalXp,
       data: {
         id: user._id,
         name: user.name,
