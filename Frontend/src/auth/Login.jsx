@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+// import { useNavigate } from 'react-router-dom'
 import { authAPI } from '../services/api'
 
 const Login = () => {
-  const navigate = useNavigate()
+  // const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -34,8 +34,8 @@ const Login = () => {
     try {
       const response = await authAPI.login(formData)
       console.log('Login successful:', response)
-      // Redirect to dashboard or home after successful login
-      navigate('/')
+      // Redirect to profile after successful login
+      // navigate('/profile')
     } catch (err) {
       setError(err.error || 'Login failed. Please check your credentials.')
       console.error('Login error:', err)
