@@ -5,14 +5,16 @@ import Login from './auth/Login'
 import Register from './auth/Register'
 import Dashboard from './components/Dashboard'
 
+
 const App = () => {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/signup" element={<Register />} />
         <Route path='/dashboard' element={<Dashboard />}/>
+       
       </Routes>
     </Router>
   )

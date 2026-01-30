@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-// import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { authAPI } from '../services/api'
 import axios from 'axios'
 
 const Login = () => {
-  // const navigate = useNavigate()
+   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -136,7 +136,7 @@ const Login = () => {
 
             <button
               type="submit"
-              onClick={() => navigator("/dashboard")}
+              onClick={() => navigate("/dashboard")}
               disabled={loading}
               className="w-48 mx-auto block rounded-full bg-[#f9f904] text-black font-semibold tracking-[0.18em] text-xs px-6 py-3 uppercase disabled:opacity-50 disabled:cursor-not-allowed"
             >
