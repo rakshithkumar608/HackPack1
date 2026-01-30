@@ -45,7 +45,7 @@ const Dashboard = () => {
         );
 
         const data = response.data;
-        console.log("The Data is:" ,data)
+        console.log("The Data is:", data)
 
         if (!Array.isArray(data) || data.length === 0) {
           throw new Error("Invalid data format from backend");
@@ -112,17 +112,23 @@ const Dashboard = () => {
       } else {
         clearInterval(interval);
       }
-    }, 500);
+    }, 9000);
 
     return () => clearInterval(interval);
   }, [loading]);
 
+  const [currentPrice, setCurrentPrice] = useState(0);
+
   const handleBuyClick = () => {
+    const livePrice = chartRef.current?.getCurrentPrice() || 0;
+    setCurrentPrice(livePrice);
     setOrderType("buy");
     setShowPopup(true);
   };
 
   const handleSellClick = () => {
+    const livePrice = chartRef.current?.getCurrentPrice() || 0;
+    setCurrentPrice(livePrice);
     setOrderType("sell");
     setShowPopup(true);
   };
@@ -191,7 +197,7 @@ const Dashboard = () => {
                 onClick={handleSellClick}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
               >
-               Buy
+                Buy
               </button>
               <button
                 onClick={handleSellClick}
@@ -226,6 +232,7 @@ const Dashboard = () => {
         <PopupBox
           stockName={selectedStock}
           orderType={orderType}
+          currentPrice={currentPrice}
           onClose={() => setShowPopup(false)}
           onConfirm={handleOrderConfirm}
         />

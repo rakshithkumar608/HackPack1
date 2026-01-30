@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const PopupBox = ({ stockName, orderType, onClose, onConfirm }) => {
+const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) => {
   const navigate = useNavigate();
 
   const [step, setStep] = useState("confirm"); // "confirm" -> "reflection" -> "orderDetails"
   const [intention, setIntention] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [price, setPrice] = useState("");
+  const [quantity, setQuantity] = useState("");;
 
   const handleConfirm = () => setStep("reflection");
 
@@ -25,18 +24,18 @@ const PopupBox = ({ stockName, orderType, onClose, onConfirm }) => {
   };
 
   const handleSubmit = () => {
-    if (!quantity || !price) {
-      alert("Please fill quantity and price");
+    if (!quantity) {
+      alert("Please fill quantity");
       return;
     }
-    const total = parseInt(quantity) * parseFloat(price);
+    const total = parseInt(quantity) * currentPrice;
     onConfirm &&
       onConfirm({
         stockName,
         orderType,
         intention,
         quantity: parseInt(quantity),
-        price: parseFloat(price),
+        price: currentPrice,
         total,
       });
     if (onClose) onClose();
@@ -44,7 +43,7 @@ const PopupBox = ({ stockName, orderType, onClose, onConfirm }) => {
   };
 
   const total =
-    quantity && price ? (parseInt(quantity) * parseFloat(price)).toFixed(2) : 0;
+    quantity ? (parseInt(quantity) * currentPrice).toFixed(2) : 0;
 
   return (
     <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
@@ -142,10 +141,9 @@ const PopupBox = ({ stockName, orderType, onClose, onConfirm }) => {
               </label>
               <input
                 type="number"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="Enter price"
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
+                value={currentPrice}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 cursor-not-allowed focus:outline-none"
               />
             </div>
 
@@ -163,11 +161,10 @@ const PopupBox = ({ stockName, orderType, onClose, onConfirm }) => {
               </button>
               <button
                 onClick={handleSubmit}
-                className={`px-4 py-2 text-white rounded transition ${
-                  orderType === "buy"
+                className={`px-4 py-2 text-white rounded transition ${orderType === "buy"
                     ? "bg-green-600 hover:bg-green-700"
                     : "bg-red-600 hover:bg-red-700"
-                }`}
+                  }`}
               >
                 {orderType === "buy" ? "Buy" : "Sell"}
               </button>

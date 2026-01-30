@@ -6,6 +6,7 @@ const Chart = forwardRef(({ data = [] }, ref) => {
   const chartRef = useRef(null);
   const seriesRef = useRef(null);
   const lastTimeRef = useRef(0);
+  const lastValueRef = useRef(0);
 
   // Initialize chart ONCE
   useEffect(() => {
@@ -49,7 +50,8 @@ const Chart = forwardRef(({ data = [] }, ref) => {
     if (data && data.length > 0) {
       areaSeries.setData(data);
       lastTimeRef.current = data[data.length - 1]?.time || 0;
-      
+      lastValueRef.current = data[data.length - 1]?.value || 0;
+
       // Position first point at left corner
       chart.timeScale().fitContent();
       const firstTime = data[0]?.time;
@@ -78,7 +80,7 @@ const Chart = forwardRef(({ data = [] }, ref) => {
     };
   }, [data]);
 
-  // Expose updatePrice method via forwardRef
+  // Expose updatePrice and getCurrentPrice methods via forwardRef
   useImperativeHandle(ref, () => ({
     addPrice: ({ time, value }) => {
       if (!seriesRef.current || !chartRef.current) return;
@@ -90,6 +92,7 @@ const Chart = forwardRef(({ data = [] }, ref) => {
       }
 
       lastTimeRef.current = time;
+      lastValueRef.current = value;
 
       // Update with new data point
       seriesRef.current.update({
@@ -99,6 +102,9 @@ const Chart = forwardRef(({ data = [] }, ref) => {
 
       // Scroll to latest
       chartRef.current.timeScale().scrollToPosition(2, false);
+    },
+    getCurrentPrice: () => {
+      return lastValueRef.current;
     },
   }));
 
