@@ -41,10 +41,11 @@ const Dashboard = () => {
         setError(null);
 
         const response = await axios.post(
-          `http://localhost:5000/api/trading/GetforRELIANCE/${stockId}`,
+          `http://localhost:5000/api/trading/GetforRELIANCE/${stockId}`
         );
 
         const data = response.data;
+        console.log("The Data is:" ,data)
 
         if (!Array.isArray(data) || data.length === 0) {
           throw new Error("Invalid data format from backend");

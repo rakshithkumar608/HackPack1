@@ -1,10 +1,7 @@
 const Order = require('../Schemas/OrderSchema');
 const User = require('../Schemas/UserSchema');
 
-/**
- * Create a BUY order: validates input, creates Order, links to user
- * Expected body: { userId, symbol, orderQuantity, price }
- */
+
 const buyOrder = async (req, res) => {
   try {
     const { userId, symbol, orderQuantity, price } = req.body;
@@ -50,7 +47,3 @@ module.exports = {
   buyOrder,
 };
 
-
-const BUY  = async (req , res)=> {
-    
-}
