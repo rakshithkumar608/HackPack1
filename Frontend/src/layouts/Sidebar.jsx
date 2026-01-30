@@ -2,8 +2,7 @@ import {
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
 } from "@heroicons/react/24/outline";
-
-
+import ArticlePage from "../pages/ArticlePage";
 
 const Sidebar = ({ className = "", onStockSelect, selected }) => {
   const stocks = [
@@ -13,8 +12,6 @@ const Sidebar = ({ className = "", onStockSelect, selected }) => {
     { name: "ICICIBANK.BSE", price: 350.05, change: -1.75, percent: -0.5 },
     { name: "SBIN.BSE", price: 78.2, change: -0.98, percent: -1.24 },
   ];
-
-
 
   return (
     <aside
@@ -74,11 +71,8 @@ const Sidebar = ({ className = "", onStockSelect, selected }) => {
         })}
       </div>
 
-      <div className="p-4 border-t text-blue-600 text-xs font-semibold flex justify-between items-center">
-        OPTIONS QUICK LIST
-        <span className="h-6 w-6 flex items-center justify-center rounded-full border text-blue-600">
-          ❯
-        </span>
+      <div className="p-4 border-t flex-1 overflow-y-auto">
+        <ArticlePage selectedStock={selected} />
       </div>
     </aside>
   );
