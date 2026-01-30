@@ -4,6 +4,7 @@ import { Home, BellIcon, UserCircleIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import Sidebar from "../layouts/Sidebar";
 import Chart from "../layouts/Chart";
+import PopupBox from "../pages/PopupBox";
 
 const STOCK_IDS = {
   "RELIANCE.BSE": "697cba312f464eddee194a8c",
@@ -17,17 +18,18 @@ const Dashboard = () => {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedStock, setSelectedStock] = useState("RELIANCE.BSE");
+  const [showPopup, setShowPopup] = useState(false);
+  const [orderType, setOrderType] = useState(null); // "buy" or "sell"
 
   const chartRef = useRef(null);
   const streamIndexRef = useRef(0);
   const allPricesRef = useRef([]);
 
-  const [selectedStock, setSelectedStock] = useState("RELIANCE.BSE");
-
   useEffect(() => {
     const stockId = STOCK_IDS[selectedStock];
     if (!stockId) {
-      setError("Stock ID not found ");
+      setError("Stock ID not found");
       setChartData([]);
       setLoading(false);
       return;
@@ -42,10 +44,7 @@ const Dashboard = () => {
           `http://localhost:5000/api/trading/GetforRELIANCE/${stockId}`,
         );
 
-        console.log("Backend response:", response.data);
-
         const data = response.data;
-        console.log("🌹🌹🌹 Data", response.data[0]);
 
         if (!Array.isArray(data) || data.length === 0) {
           throw new Error("Invalid data format from backend");
@@ -73,10 +72,7 @@ const Dashboard = () => {
           throw new Error("No valid data points extracted");
         }
 
-        console.log("✅ Formatted chart points:", formatted.length);
         allPricesRef.current = formatted;
-
-        // Set initial data (first 10 points only)
         const initialData = formatted.slice(0, 10);
         setChartData(initialData);
         streamIndexRef.current = 10;
@@ -84,7 +80,7 @@ const Dashboard = () => {
         if (err.response) {
           setError(`Server error: ${err.response.status}`);
         } else if (err.request) {
-          setError("Backend not reachable (server down?)");
+          setError("Backend not reachable");
         } else {
           setError(err.message);
         }
@@ -96,7 +92,7 @@ const Dashboard = () => {
     fetchData();
   }, [selectedStock]);
 
-  // Stream data one by one every 500ms (faster)
+  // Stream data
   useEffect(() => {
     if (allPricesRef.current.length === 0 || loading) return;
 
@@ -104,7 +100,6 @@ const Dashboard = () => {
       if (streamIndexRef.current < allPricesRef.current.length) {
         const nextPoint = allPricesRef.current[streamIndexRef.current];
 
-        // Add to chart via ref
         if (chartRef.current) {
           chartRef.current.addPrice({
             time: nextPoint.time,
@@ -115,12 +110,29 @@ const Dashboard = () => {
         streamIndexRef.current++;
       } else {
         clearInterval(interval);
-        console.log("✅ Chart streaming complete");
       }
-    }, 500); // 500ms per data point (faster)
+    }, 500);
 
     return () => clearInterval(interval);
   }, [loading]);
+
+  const handleBuyClick = () => {
+    setOrderType("buy");
+    setShowPopup(true);
+  };
+
+  const handleSellClick = () => {
+    setOrderType("sell");
+    setShowPopup(true);
+  };
+
+  const handleOrderConfirm = (orderData) => {
+    console.log("Order placed:", orderData);
+    // Send to backend or process order here
+    alert(
+      `${orderData.orderType.toUpperCase()} order placed:\n${orderData.quantity} units of ${orderData.stockName} @ ₹${orderData.price}`,
+    );
+  };
 
   return (
     <div className="h-screen flex flex-col">
@@ -150,7 +162,7 @@ const Dashboard = () => {
 
       <div className="flex flex-1 bg-gray-100">
         <Sidebar
-          className="hidden md:block text-3xl font-bold"
+          className="hidden md:block"
           onStockSelect={(name) => setSelectedStock(name)}
           selected={selectedStock}
         />
@@ -162,16 +174,28 @@ const Dashboard = () => {
                 Market Overview
               </h1>
 
-              <div className="text-2xl text-gray-600 bg-gray-100 px-3 py-1 rounded-md ">
+              <div className="text-2xl text-gray-600 bg-gray-100 px-3 py-1 rounded-md">
                 {selectedStock}
               </div>
             </div>
 
             <div className="flex gap-3">
-              <button className="px-4 py-2 bg-green-600 text-white rounded">
-                Buy
+              <button
+                onClick={handleBuyClick}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+              >
+                Reflection
               </button>
-              <button className="px-4 py-2 bg-red-600 text-white rounded">
+              <button
+                onClick={handleSellClick}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+              >
+               Buy
+              </button>
+              <button
+                onClick={handleSellClick}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+              >
                 Sell
               </button>
             </div>
@@ -195,6 +219,16 @@ const Dashboard = () => {
           </div>
         </main>
       </div>
+
+      {/* Popup */}
+      {showPopup && (
+        <PopupBox
+          stockName={selectedStock}
+          orderType={orderType}
+          onClose={() => setShowPopup(false)}
+          onConfirm={handleOrderConfirm}
+        />
+      )}
     </div>
   );
 };
