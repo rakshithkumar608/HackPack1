@@ -1,13 +1,80 @@
-import React from "react";
+import axios from "axios";
+import React, { useState, useEffect } from "react";
 import { Home, BellIcon, UserCircleIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import Sidebar from "../layouts/Sidebar";
 import Chart from "../layouts/Chart";
 
 const Dashboard = () => {
+  const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const stockId = "697cbbc0c4c03242cb8ec328";
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await axios.post(
+          `http://localhost:5000/api/trading/GetforRELIANCE/${stockId}`,
+        );
+
+        console.log("Backend response:", response.data);
+
+        const data = response.data;
+
+        if (!Array.isArray(data) || data.length === 0) {
+          throw new Error("Invalid data format from backend");
+        }
+
+        // Transform backend data → chart format
+        const formatted = [];
+        let timeCounter = 1642425322;
+
+        data.forEach((dayPrices) => {
+          if (Array.isArray(dayPrices)) {
+            dayPrices.forEach((price) => {
+              const numPrice = Number(price);
+              if (!isNaN(numPrice)) {
+                formatted.push({
+                  time: timeCounter,
+                  value: numPrice,
+                });
+                timeCounter += 3600; // 1 hour gap
+              }
+            });
+          }
+        });
+
+        if (formatted.length === 0) {
+          throw new Error("No valid data points extracted");
+        }
+
+        console.log("✅ Formatted chart points:", formatted.length);
+        setChartData(formatted);
+      } catch (err) {
+        console.error("❌ Axios error:", err);
+
+        if (err.response) {
+          setError(`Server error: ${err.response.status}`);
+        } else if (err.request) {
+          setError("Backend not reachable (server down?)");
+        } else {
+          setError(err.message);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="h-screen flex flex-col">
-      {/* HEADER */}
       <header className="h-16 bg-white border-b flex items-center justify-between px-6">
         <span className="text-xl font-semibold">
           <span className="font-bold">Stock</span>
@@ -19,55 +86,47 @@ const Dashboard = () => {
             <Home size={18} />
           </NavLink>
 
-          <NavLink to="#" className="hover:text-blue-600 transition">
-            Watchlist
-          </NavLink>
-          <NavLink to="#" className="hover:text-blue-600 transition">
-            Portfolio
-          </NavLink>
-          <NavLink to="#" className="hover:text-blue-600 transition">
-            Orders
-          </NavLink>
+          <NavLink to="#">Watchlist</NavLink>
+          <NavLink to="#">Portfolio</NavLink>
+          <NavLink to="#">Orders</NavLink>
 
           <button className="relative">
-            <BellIcon
-              size={18}
-              className="text-gray-600 hover:text-blue-600 transition"
-            />
-            <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full" />
+            <BellIcon size={18} />
+            <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
           </button>
 
-          <UserCircleIcon
-            size={28}
-            className="text-gray-600 hover:text-blue-600 cursor-pointer transition"
-          />
+          <UserCircleIcon size={28} />
         </div>
       </header>
 
-      {/* BODY */}
       <div className="flex flex-1 bg-gray-100">
-        <Sidebar />
+        <Sidebar className="hidden md:block" />
 
-        <main className="flex-1 flex flex-col">
-          {/* TOP BAR INSIDE MAIN */}
-          <div className="h-14 px-6 flex items-center justify-between border-b bg-white">
-            <h1 className="text-lg font-semibold text-gray-700">
+        <main className="flex-1 p-6 flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-xl font-semibold text-gray-700">
               Market Overview
             </h1>
 
             <div className="flex gap-3">
-              <button className="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition font-semibold">
+              <button className="px-4 py-2 bg-green-600 text-white rounded">
                 Buy
               </button>
-              <button className="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition font-semibold">
+              <button className="px-4 py-2 bg-red-600 text-white rounded">
                 Sell
               </button>
             </div>
           </div>
 
-          {/* CHART AREA */}
-          <div className="flex-1 p-4">
-            <Chart />
+          <div className="flex-1">
+            {loading && <div>Loading chart...</div>}
+            {error && <div className="text-red-600">❌ {error}</div>}
+            {!loading && !error && chartData.length > 0 && (
+              <Chart data={chartData} />
+            )}
+            {!loading && !error && chartData.length === 0 && (
+              <div>No data available</div>
+            )}
           </div>
         </main>
       </div>
