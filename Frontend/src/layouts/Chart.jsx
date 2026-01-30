@@ -1,48 +1,41 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { createChart, AreaSeries, ColorType } from "lightweight-charts";
 
-const defaultData = [
-  { time: 1642425322, value: 0 },
-  { time: 1642511722, value: 8 },
-  { time: 1642598122, value: 10 },
-  { time: 1642684522, value: 20 },
-  { time: 1642770922, value: 3 },
-  { time: 1642857322, value: 43 },
-  { time: 1642943722, value: 41 },
-  { time: 1643030122, value: 43 },
-  { time: 1643116522, value: 56 },
-  { time: 1643202922, value: 46 },
-];
-
-const Chart = ({ data = defaultData }) => {
+const Chart = forwardRef(({ data = [] }, ref) => {
   const containerRef = useRef(null);
+  const chartRef = useRef(null);
+  const seriesRef = useRef(null);
+  const lastTimeRef = useRef(0);
 
+  // Initialize chart ONCE
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // 1. Initialize Chart with Watermark Hidden
-  const chart = createChart(containerRef.current, {
-    width: containerRef.current.clientWidth,
-    height: containerRef.current.clientHeight,
-    layout: {
-      background: { type: ColorType.Solid, color: "#ffffff" },
-      textColor: "#d1d4dc",
-    },
-    watermark: {
-      visible: false,
-    },
-    grid: {
-      vertLines: { color: "rgba(42, 46, 57, 0.5)" },
-      horzLines: { color: "rgba(42, 46, 57, 0.5)" },
-    },
-    timeScale: {
-      rightOffset: 5,
-      barSpacing: 15,
-      borderColor: "#2B2B43",
-    },
-  });
+    const chart = createChart(containerRef.current, {
+      width: containerRef.current.clientWidth,
+      height: containerRef.current.clientHeight,
+      layout: {
+        background: { type: ColorType.Solid, color: "#ffffff" },
+        textColor: "#d1d4dc",
+      },
+      watermark: {
+        visible: false,
+      },
+      grid: {
+        vertLines: { color: "rgba(42, 46, 57, 0.5)" },
+        horzLines: { color: "rgba(42, 46, 57, 0.5)" },
+      },
+      timeScale: {
+        rightOffset: 5,
+        barSpacing: 15,
+        borderColor: "#2B2B43",
+        leftOffset: 0,
+      },
+    });
 
-    // 2. ✅ v5 WAY (Ensures no "not a function" error)
+    chartRef.current = chart;
+
+    // Create AreaSeries ONCE
     const areaSeries = chart.addSeries(AreaSeries, {
       lineColor: "#2962FF",
       topColor: "rgba(41, 98, 255, 0.3)",
@@ -50,12 +43,26 @@ const Chart = ({ data = defaultData }) => {
       lineWidth: 2,
     });
 
-    areaSeries.setData(data);
-    chart.timeScale().fitContent();
+    seriesRef.current = areaSeries;
 
-    // 3. Handle Responsive Resizing
+    // Set initial data if provided
+    if (data && data.length > 0) {
+      areaSeries.setData(data);
+      lastTimeRef.current = data[data.length - 1]?.time || 0;
+      
+      // Position first point at left corner
+      chart.timeScale().fitContent();
+      const firstTime = data[0]?.time;
+      if (firstTime) {
+        setTimeout(() => {
+          chart.timeScale().scrollToPosition(-5, false);
+        }, 10);
+      }
+    }
+
+    // Handle Responsive Resizing
     const handleResize = () => {
-      if (containerRef.current) {
+      if (containerRef.current && chart) {
         chart.applyOptions({
           width: containerRef.current.clientWidth,
           height: containerRef.current.clientHeight,
@@ -67,19 +74,44 @@ const Chart = ({ data = defaultData }) => {
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      chart.remove(); // Cleanup to prevent memory leaks
+      chart.remove();
     };
-  }, [data]);
+  }, []);
+
+  // Expose updatePrice method via forwardRef
+  useImperativeHandle(ref, () => ({
+    addPrice: ({ time, value }) => {
+      if (!seriesRef.current || !chartRef.current) return;
+
+      // Ensure time is strictly increasing
+      if (time <= lastTimeRef.current) {
+        console.warn(`⚠️ Time must increase. Got ${time}, last ${lastTimeRef.current}`);
+        return;
+      }
+
+      lastTimeRef.current = time;
+
+      // Update with new data point
+      seriesRef.current.update({
+        time,
+        value,
+      });
+
+      // Scroll to latest
+      chartRef.current.timeScale().scrollToPosition(2, false);
+    },
+  }));
 
   return (
     <div className="w-full h-full relative">
       <div
         ref={containerRef}
         className="w-full h-full"
-        style={{ minHeight: "400px" }} // Ensures visibility
+        style={{ minHeight: "400px" }}
       />
     </div>
   );
-};
+});
 
+Chart.displayName = "Chart";
 export default Chart;

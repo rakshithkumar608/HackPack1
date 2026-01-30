@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Home, BellIcon, UserCircleIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import Sidebar from "../layouts/Sidebar";
@@ -9,6 +9,9 @@ const Dashboard = () => {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const chartRef = useRef(null);
+  const streamIndexRef = useRef(0);
+  const allPricesRef = useRef([]);
 
   useEffect(() => {
     const stockId = "697cbbc0c4c03242cb8ec328";
@@ -23,9 +26,10 @@ const Dashboard = () => {
         );
 
         console.log("Backend response:", response.data);
-
+      
         const data = response.data;
-
+        console.log("🌹🌹🌹 Data",response.data[0])
+         
         if (!Array.isArray(data) || data.length === 0) {
           throw new Error("Invalid data format from backend");
         }
@@ -54,7 +58,12 @@ const Dashboard = () => {
         }
 
         console.log("✅ Formatted chart points:", formatted.length);
-        setChartData(formatted);
+        allPricesRef.current = formatted;
+        
+        // Set initial data (first 10 points)
+        const initialData = formatted.slice(0, 10);
+        setChartData(initialData);
+        streamIndexRef.current = 10;
       } catch (err) {
         console.error("❌ Axios error:", err);
 
@@ -72,6 +81,32 @@ const Dashboard = () => {
 
     fetchData();
   }, []);
+
+  // Stream data one by one every 500ms (faster)
+  useEffect(() => {
+    if (allPricesRef.current.length === 0 || loading) return;
+
+    const interval = setInterval(() => {
+      if (streamIndexRef.current < allPricesRef.current.length) {
+        const nextPoint = allPricesRef.current[streamIndexRef.current];
+        
+        // Add to chart via ref
+        if (chartRef.current) {
+          chartRef.current.addPrice({
+            time: nextPoint.time,
+            value: nextPoint.value,
+          });
+        }
+
+        streamIndexRef.current++;
+      } else {
+        clearInterval(interval);
+        console.log("✅ Chart streaming complete");
+      }
+    }, 500); // 500ms per data point (faster)
+
+    return () => clearInterval(interval);
+  }, [loading]);
 
   return (
     <div className="h-screen flex flex-col">
@@ -122,7 +157,12 @@ const Dashboard = () => {
             {loading && <div>Loading chart...</div>}
             {error && <div className="text-red-600">❌ {error}</div>}
             {!loading && !error && chartData.length > 0 && (
-              <Chart data={chartData} />
+              <>
+                <div className="text-sm text-gray-600 mb-2">
+                  📊 Live Streaming: {streamIndexRef.current} / {allPricesRef.current.length} points
+                </div>
+                <Chart ref={chartRef} data={chartData} />
+              </>
             )}
             {!loading && !error && chartData.length === 0 && (
               <div>No data available</div>
