@@ -28,7 +28,7 @@ const LandingPage = () => {
             className="flex-none space-y-5 max-w-xl"
           >
             <a
-              href="#"
+              href=""
               className="inline-flex gap-x-4 items-center rounded-full p-1 pr-5 border text-sm font-medium hover:bg-white transition"
             >
               <span className="rounded-full px-3 py-1 bg-indigo-600 text-white">
