@@ -12,9 +12,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log('MongoDB connection error:', err))
+// MongoDB connection
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.log('MongoDB connection error:', err))
+} else {
+  console.log('WARNING: MONGODB_URI not found in .env file')
+}
 
 
 // Use routes with a base path
