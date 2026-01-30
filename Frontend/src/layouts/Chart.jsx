@@ -76,7 +76,7 @@ const Chart = forwardRef(({ data = [] }, ref) => {
       window.removeEventListener("resize", handleResize);
       chart.remove();
     };
-  }, []);
+  }, [data]);
 
   // Expose updatePrice method via forwardRef
   useImperativeHandle(ref, () => ({
