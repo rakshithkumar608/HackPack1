@@ -64,10 +64,103 @@ const LandingPage = () => {
           {/* Right Image */}
           <div className="flex-1 hidden md:flex justify-center">
             <img
-              src="https://raw.githubusercontent.com/sidiDev/remote-assets/c86a7ae02ac188442548f510b5393c04140515d7/undraw_progressive_app_m-9-ms_oftfv5.svg"
-              className="max-w-xl"
-              alt="Trading illustration"
+              src="https://img.freepik.com/free-vector/hand-drawn-flat-design-metaverse-background_52683-80690.jpg?semt=ais_hybrid&w=740&q=80"
+              alt="Landing Illustration"
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Three Info Cards Section */}
+      <section className="bg-gradient-to-r from-purple-50 to-blue-50 py-20">
+        <div className="max-w-7xl mx-auto px-6 md:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-800 mb-4">
+              Why Choose Us?
+            </h2>
+            <p className="text-lg text-gray-600">
+              Everything you need to master trading
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Card 1 */}
+            <div className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition">
+              <div className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center mb-4">
+                <svg
+                  className="w-7 h-7 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                Virtual Money
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Practice trading with unlimited virtual money. No deposits
+                needed to get started learning the basics.
+              </p>
+            </div>
+
+            {/* Card 2 */}
+            <div className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition">
+              <div className="w-14 h-14 bg-green-600 rounded-full flex items-center justify-center mb-4">
+                <svg
+                  className="w-7 h-7 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                Real-time Data
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Access live market data and trending stocks. Make informed
+                decisions based on real-time market information.
+              </p>
+            </div>
+
+            {/* Card 3 */}
+            <div className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition">
+              <div className="w-14 h-14 bg-purple-600 rounded-full flex items-center justify-center mb-4">
+                <svg
+                  className="w-7 h-7 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5.36 5.36l-.707.707M9 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                Learn & Practice
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Gain practical experience with educational resources. Build your
+                trading skills without financial risk.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -90,7 +183,7 @@ const LandingPage = () => {
           {/* Right Image */}
           <div className="flex w-1/2 justify-center max-lg:mt-12 max-lg:w-full">
             <img
-              src="/phone-illustration.png"
+              src="https://play-lh.googleusercontent.com/m6qMtEfuWKK2KlLFcWovURK7LwbD95Rgk5e8ipIh4Em4rkDecjqm64VlTA9HgSyMsEg=w240-h480-rw"
               alt="Stock trading illustration"
               className="w-105 max-w-full"
             />
@@ -104,7 +197,7 @@ const LandingPage = () => {
           {/* Right Image */}
           <div className="flex w-1/2 justify-center max-lg:mt-12 max-lg:w-full">
             <img
-              src="/phone-illustration.png"
+              src="https://www.omfif.org/wp-content/uploads/2022/07/trading-gamification-newweb.png"
               alt="Stock trading illustration"
               className="w-105 max-w-full"
             />
@@ -140,7 +233,7 @@ const LandingPage = () => {
           {/* Right Image */}
           <div className="flex w-1/2 justify-center max-lg:mt-12 max-lg:w-full">
             <img
-              src="/phone-illustration.png"
+              src="https://blog.vinfotech.com/sites/default/files/styles/blog-list-img-new/public/Gamification-to-stock-fantasy_0.png?itok=PYA3994o"
               alt="Stock trading illustration"
               className="w-105 max-w-full"
             />

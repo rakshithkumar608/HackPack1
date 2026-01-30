@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
  import { authAPI } from '../services/api'
 import axios from 'axios'
-import imgg1 from "../assets/imgg1.png"
+
 const Register = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
@@ -64,7 +64,9 @@ const Register = () => {
             Sign up for <span className="text-blue-700">FREE</span>
           </h1>
           <ul className="space-y-2 text-base text-slate-800 list-disc list-inside mb-10">
-            <li>Practice trading stocks, cryptos &amp; options with virtual money</li>
+            <li>
+              Practice trading stocks, cryptos &amp; options with virtual money
+            </li>
             <li>Gain confidence before risking your own money</li>
             <li>Learn how the markets work in a safe space with no risk</li>
           </ul>
@@ -75,7 +77,7 @@ const Register = () => {
           <div className="w-full max-w-xl">
             {/* Replace src with your actual illustration */}
             <img
-              src={imgg1}
+              src="https://img.freepik.com/free-vector/hand-drawn-flat-design-metaverse-background_52683-80690.jpg?semt=ais_hybrid&w=740&q=80"
               alt="Trading simulator illustration"
               className="w-full h-auto object-contain"
             />
@@ -144,7 +146,9 @@ const Register = () => {
 
             {/* Username rules box */}
             <div className="bg-slate-100 border border-slate-200 px-4 py-3 rounded-sm text-xs text-slate-700">
-              <p className="font-semibold mb-1">Your username may only contain:</p>
+              <p className="font-semibold mb-1">
+                Your username may only contain:
+              </p>
               <ul className="list-disc list-inside space-y-1">
                 <li>Letters, numbers, hyphens (-), and underscores (_).</li>
               </ul>
@@ -156,7 +160,7 @@ const Register = () => {
               disabled={loading}
               className="w-48 mx-auto block rounded-full bg-[#f9f904] text-black font-semibold tracking-[0.18em] text-xs px-6 py-3 uppercase disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Registering...' : 'Register'}
+              {loading ? "Registering..." : "Register"}
             </button>
 
             <div className="flex items-center justify-center gap-4 text-xs text-slate-400">
@@ -167,7 +171,7 @@ const Register = () => {
 
             <div className="text-center text-sm">
               <button
-              onClick={() => navigate('/login')}
+                onClick={() => navigate("/login")}
                 type="button"
                 className="text-blue-700 font-semibold hover:underline"
               >
@@ -177,16 +181,21 @@ const Register = () => {
           </form>
 
           <p className="mt-10 text-[11px] leading-relaxed text-slate-500">
-            By registering, you agree to the{' '}
-            <span className="text-blue-700 underline cursor-pointer">Terms of Use</span> and{' '}
-            <span className="text-blue-700 underline cursor-pointer">Privacy Policy</span>. If you
-            live in the US you&apos;ll also be subscribed to The Market Sum and The Express
-            newsletters.
+            By registering, you agree to the{" "}
+            <span className="text-blue-700 underline cursor-pointer">
+              Terms of Use
+            </span>{" "}
+            and{" "}
+            <span className="text-blue-700 underline cursor-pointer">
+              Privacy Policy
+            </span>
+            . If you live in the US you&apos;ll also be subscribed to The Market
+            Sum and The Express newsletters.
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default Register
