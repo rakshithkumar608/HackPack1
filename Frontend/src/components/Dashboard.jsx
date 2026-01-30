@@ -290,22 +290,12 @@ const Dashboard = () => {
             </div>
 
             <div className="flex gap-3">
-            
+
               <button
                 onClick={handleBuyClick}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
               >
-<<<<<<< HEAD
-                Reflection
-              </button>
-              <button
-                onClick={handleSellClick}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-              >
                 Buy
-=======
-               Buy
->>>>>>> 7ca5bc4 (frontend code)
               </button>
               <button
                 onClick={handleSellClick}

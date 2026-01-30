@@ -201,28 +201,37 @@ const getPortfolio = async (req, res) => {
   try {
     const userId = req.user._id; // From auth middleware
 
+    // Get user for balance
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
     // Get all orders for the user
     const orders = await Order.find({ userId }).sort({ createdAt: -1 });
 
     // Aggregate holdings by symbol
     const holdings = {};
+    let totalInvestedOverall = 0;
+
     orders.forEach(order => {
       if (!holdings[order.symbol]) {
         holdings[order.symbol] = {
           symbol: order.symbol,
           totalQuantity: 0,
-          totalInvested: 0,
-          avgPrice: 0,
+          totalBuyAmount: 0,
+          totalSellAmount: 0,
+          avgBuyPrice: 0,
+          buyCount: 0,
           orders: []
         };
       }
 
       if (order.orderType === 'BUY') {
         holdings[order.symbol].totalQuantity += order.orderQuantity;
-        holdings[order.symbol].totalInvested += order.totalAmount;
+        holdings[order.symbol].totalBuyAmount += order.totalAmount;
+        holdings[order.symbol].buyCount += order.orderQuantity;
       } else if (order.orderType === 'SELL') {
         holdings[order.symbol].totalQuantity -= order.orderQuantity;
-        holdings[order.symbol].totalInvested -= order.totalAmount;
+        holdings[order.symbol].totalSellAmount += order.totalAmount;
       }
 
       holdings[order.symbol].orders.push({
@@ -235,20 +244,39 @@ const getPortfolio = async (req, res) => {
       });
     });
 
-    // Calculate average price for each holding
+    // Calculate average buy price and current investment for each holding
     Object.values(holdings).forEach(holding => {
+      if (holding.buyCount > 0) {
+        holding.avgBuyPrice = holding.totalBuyAmount / holding.buyCount;
+      }
+      // Net invested = total bought - total sold
+      holding.netInvested = holding.totalBuyAmount - holding.totalSellAmount;
       if (holding.totalQuantity > 0) {
-        holding.avgPrice = holding.totalInvested / holding.totalQuantity;
+        totalInvestedOverall += holding.netInvested;
       }
     });
 
-    // Convert to array and filter out zero holdings
-    const portfolioData = Object.values(holdings).filter(h => h.totalQuantity > 0);
+    // Convert to array and filter out zero holdings for current holdings
+    const currentHoldings = Object.values(holdings).filter(h => h.totalQuantity > 0);
+
+    // Get recent orders (last 10)
+    const recentOrders = orders.slice(0, 10).map(order => ({
+      id: order._id,
+      symbol: order.symbol,
+      type: order.orderType,
+      quantity: order.orderQuantity,
+      price: order.price,
+      total: order.totalAmount,
+      date: order.createdAt
+    }));
 
     return res.status(200).json({
       message: 'Portfolio fetched successfully',
-      portfolio: portfolioData,
-      totalOrders: orders.length
+      availableBalance: user.availableBalance || 100000,
+      totalInvested: totalInvestedOverall,
+      holdings: currentHoldings,
+      recentOrders: recentOrders,
+      totalOrderCount: orders.length
     });
   } catch (err) {
     console.error('getPortfolio error:', err);

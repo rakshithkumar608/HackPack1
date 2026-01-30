@@ -32,6 +32,7 @@ app.use(cookieParser());
 app.use('/api/users', userRoutes);
 app.use('/api/trading', DataRoutes);
 app.use('/api/orders', OrderRoutes);
+app.use('/api/ai', require('./Routes/AIRoutes'));
 
 
 

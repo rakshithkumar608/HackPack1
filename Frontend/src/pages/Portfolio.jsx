@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Home, BellIcon, UserCircleIcon, TrendingUp, TrendingDown } from "lucide-react";
+import { Home, BellIcon, UserCircleIcon, TrendingUp, TrendingDown, Wallet, PieChart } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const Portfolio = () => {
-    const [portfolio, setPortfolio] = useState([]);
+    const [portfolioData, setPortfolioData] = useState({
+        availableBalance: 0,
+        totalInvested: 0,
+        holdings: [],
+        recentOrders: []
+    });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -14,11 +19,14 @@ const Portfolio = () => {
                 setLoading(true);
                 const response = await axios.get(
                     "http://localhost:5000/api/orders/portfolio",
-                    {
-                        withCredentials: true // Send cookies with request
-                    }
+                    { withCredentials: true }
                 );
-                setPortfolio(response.data.portfolio || []);
+                setPortfolioData({
+                    availableBalance: response.data.availableBalance || 0,
+                    totalInvested: response.data.totalInvested || 0,
+                    holdings: response.data.holdings || [],
+                    recentOrders: response.data.recentOrders || []
+                });
             } catch (err) {
                 console.error("Error fetching portfolio:", err);
                 setError(err.response?.data?.message || err.response?.data?.error || "Failed to fetch portfolio");
@@ -26,14 +34,11 @@ const Portfolio = () => {
                 setLoading(false);
             }
         };
-
         fetchPortfolio();
     }, []);
 
-    const totalValue = portfolio.reduce(
-        (sum, holding) => sum + holding.totalInvested,
-        0
-    );
+    const { availableBalance, totalInvested, holdings, recentOrders } = portfolioData;
+    const totalPortfolioValue = availableBalance + totalInvested;
 
     return (
         <div className="h-screen flex flex-col bg-gray-100">
@@ -45,20 +50,14 @@ const Portfolio = () => {
                 </span>
 
                 <div className="flex items-center space-x-6 text-sm font-medium text-gray-700">
-                    <NavLink to="/">
-                        <Home size={18} />
-                    </NavLink>
+                    <NavLink to="/"><Home size={18} /></NavLink>
                     <NavLink to="/dashboard">Dashboard</NavLink>
-                    <NavLink to="/portfolio" className="text-blue-600 font-semibold">
-                        Portfolio
-                    </NavLink>
+                    <NavLink to="/portfolio" className="text-blue-600 font-semibold">Portfolio</NavLink>
                     <NavLink to="#">Orders</NavLink>
-
                     <button className="relative">
                         <BellIcon size={18} />
                         <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
                     </button>
-
                     <UserCircleIcon size={28} />
                 </div>
             </header>
@@ -66,24 +65,39 @@ const Portfolio = () => {
             {/* Main Content */}
             <main className="flex-1 p-6 overflow-auto">
                 <div className="max-w-6xl mx-auto">
-                    {/* Portfolio Summary */}
-                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-                            My Portfolio
-                        </h1>
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <p className="text-sm text-gray-500">Total Invested</p>
-                                <p className="text-3xl font-bold text-gray-800">
-                                    ₹{totalValue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                                </p>
+                    {/* Portfolio Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        {/* Available Balance */}
+                        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-5 text-white">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Wallet size={20} />
+                                <span className="text-green-100 text-sm">Available Balance</span>
                             </div>
-                            <div className="ml-auto text-right">
-                                <p className="text-sm text-gray-500">Holdings</p>
-                                <p className="text-2xl font-semibold text-gray-700">
-                                    {portfolio.length}
-                                </p>
+                            <p className="text-3xl font-bold">
+                                ₹{availableBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            </p>
+                        </div>
+
+                        {/* Total Invested */}
+                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-5 text-white">
+                            <div className="flex items-center gap-2 mb-2">
+                                <PieChart size={20} />
+                                <span className="text-blue-100 text-sm">Total Invested</span>
                             </div>
+                            <p className="text-3xl font-bold">
+                                ₹{totalInvested.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            </p>
+                        </div>
+
+                        {/* Total Portfolio */}
+                        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-5 text-white">
+                            <div className="flex items-center gap-2 mb-2">
+                                <TrendingUp size={20} />
+                                <span className="text-purple-100 text-sm">Total Portfolio Value</span>
+                            </div>
+                            <p className="text-3xl font-bold">
+                                ₹{totalPortfolioValue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            </p>
                         </div>
                     </div>
 
@@ -101,97 +115,113 @@ const Portfolio = () => {
                         </div>
                     )}
 
-                    {/* Holdings List */}
-                    {!loading && !error && portfolio.length === 0 && (
-                        <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                            <p className="text-gray-500 text-lg">No holdings yet</p>
-                            <p className="text-gray-400 mt-2">
-                                Start trading to build your portfolio!
-                            </p>
-                            <NavLink
-                                to="/dashboard"
-                                className="inline-block mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                            >
-                                Go to Dashboard
-                            </NavLink>
-                        </div>
-                    )}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Current Holdings */}
+                        <div className="lg:col-span-2">
+                            <div className="bg-white rounded-lg shadow-md p-5">
+                                <h2 className="text-xl font-bold text-gray-800 mb-4">Current Holdings</h2>
 
-                    {!loading && !error && portfolio.length > 0 && (
-                        <div className="grid gap-4">
-                            {portfolio.map((holding) => (
-                                <div
-                                    key={holding.symbol}
-                                    className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                                <span className="text-blue-600 font-bold text-sm">
-                                                    {holding.symbol.slice(0, 3)}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-gray-800 text-lg">
-                                                    {holding.symbol}
-                                                </h3>
-                                                <p className="text-sm text-gray-500">
-                                                    {holding.totalQuantity} shares
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="text-right">
-                                            <p className="font-bold text-gray-800 text-lg">
-                                                ₹{holding.totalInvested.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                                            </p>
-                                            <p className="text-sm text-gray-500">
-                                                Avg: ₹{holding.avgPrice.toFixed(2)}
-                                            </p>
-                                        </div>
+                                {!loading && !error && holdings.length === 0 && (
+                                    <div className="text-center py-8">
+                                        <p className="text-gray-500">No holdings yet</p>
+                                        <NavLink
+                                            to="/dashboard"
+                                            className="inline-block mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                        >
+                                            Start Trading
+                                        </NavLink>
                                     </div>
+                                )}
 
-                                    {/* Order History */}
-                                    <div className="mt-4 border-t pt-4">
-                                        <p className="text-sm font-medium text-gray-600 mb-2">
-                                            Recent Orders
-                                        </p>
-                                        <div className="space-y-2 max-h-32 overflow-auto">
-                                            {holding.orders.slice(0, 3).map((order) => (
+                                {!loading && !error && holdings.length > 0 && (
+                                    <div className="space-y-4">
+                                        {holdings.map((holding) => (
+                                            <div
+                                                key={holding.symbol}
+                                                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                                            <span className="text-blue-600 font-bold text-sm">
+                                                                {holding.symbol.slice(0, 3)}
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="font-semibold text-gray-800">{holding.symbol}</h3>
+                                                            <p className="text-sm text-gray-500">{holding.totalQuantity} shares</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="text-right">
+                                                        <p className="font-bold text-gray-800">
+                                                            ₹{(holding.netInvested || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                                        </p>
+                                                        <p className="text-sm text-gray-500">
+                                                            Avg: ₹{(holding.avgBuyPrice || 0).toFixed(2)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Recent Orders */}
+                        <div className="lg:col-span-1">
+                            <div className="bg-white rounded-lg shadow-md p-5">
+                                <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Orders</h2>
+
+                                {!loading && recentOrders.length === 0 && (
+                                    <p className="text-gray-500 text-center py-4">No orders yet</p>
+                                )}
+
+                                {!loading && recentOrders.length > 0 && (
+                                    <div className="space-y-3">
+                                        {recentOrders.map((order) => {
+                                            const isBuy = order.type === "BUY";
+                                            return (
                                                 <div
                                                     key={order.id}
-                                                    className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded"
+                                                    className={`p-3 rounded-lg border-l-4 ${isBuy
+                                                            ? "bg-green-50 border-green-500"
+                                                            : "bg-red-50 border-red-500"
+                                                        }`}
                                                 >
-                                                    <div className="flex items-center gap-2">
-                                                        {order.type === "BUY" ? (
-                                                            <TrendingUp size={14} className="text-green-600" />
-                                                        ) : (
-                                                            <TrendingDown size={14} className="text-red-600" />
-                                                        )}
-                                                        <span
-                                                            className={
-                                                                order.type === "BUY"
-                                                                    ? "text-green-600"
-                                                                    : "text-red-600"
-                                                            }
-                                                        >
-                                                            {order.type}
-                                                        </span>
-                                                        <span className="text-gray-600">
-                                                            {order.quantity} @ ₹{order.price}
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            {isBuy ? (
+                                                                <TrendingUp size={16} className="text-green-600" />
+                                                            ) : (
+                                                                <TrendingDown size={16} className="text-red-600" />
+                                                            )}
+                                                            <span className={`font-semibold ${isBuy ? "text-green-700" : "text-red-700"}`}>
+                                                                {order.type}
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-xs text-gray-500">
+                                                            {new Date(order.date).toLocaleDateString()}
                                                         </span>
                                                     </div>
-                                                    <span className="text-gray-400 text-xs">
-                                                        {new Date(order.date).toLocaleDateString()}
-                                                    </span>
+                                                    <div className="mt-1">
+                                                        <span className="font-medium text-gray-800">{order.symbol}</span>
+                                                        <span className="text-gray-500 text-sm ml-2">
+                                                            {order.quantity} @ ₹{order.price?.toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                    <div className={`text-sm font-semibold mt-1 ${isBuy ? "text-green-600" : "text-red-600"}`}>
+                                                        {isBuy ? "-" : "+"}₹{(order.total || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                                    </div>
                                                 </div>
-                                            ))}
-                                        </div>
+                                            );
+                                        })}
                                     </div>
-                                </div>
-                            ))}
+                                )}
+                            </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             </main>
         </div>
