@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authAPI } from '../services/api'
+import axios from 'axios'
 
 const Register = () => {
   const navigate = useNavigate()
@@ -39,7 +40,10 @@ const Register = () => {
     }
 
     try {
-      const response = await authAPI.signup(formData)
+      const response = await axios.post("http://localhost:5000/api/users/SignUp",
+         formData ,
+         {withCredentials:true}
+      )
       console.log('Registration successful:', response)
       // Redirect to login after successful registration
       navigate('/login')

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 // import { useNavigate } from 'react-router-dom'
 import { authAPI } from '../services/api'
+import axios from 'axios'
 
 const Login = () => {
   // const navigate = useNavigate()
@@ -32,7 +33,13 @@ const Login = () => {
     }
 
     try {
-      const response = await authAPI.login(formData)
+      console.log("triggerd")
+      const response = await axios.post(
+         "http://localhost:5000/api/users/Login",
+         formData ,
+         {withCredentials:true}
+        );
+
       console.log('Login successful:', response)
       // Redirect to profile after successful login
       // navigate('/profile')
