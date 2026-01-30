@@ -2,8 +2,8 @@ import axios from "axios";
 import React, { useState, useEffect, useRef } from "react";
 import { Home, BellIcon, UserCircleIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import Sidebar from "../../layouts/Sidebar";
-import Chart from "../../layouts/Chart";
+import Sidebar from "../layouts/Sidebar";
+import Chart from "../layouts/Chart";
 
 const STOCK_IDS = {
   "RELIANCE.BSE": "697cba312f464eddee194a8c",
