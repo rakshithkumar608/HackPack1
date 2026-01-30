@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
- import { authAPI } from '../services/api'
+import { authAPI } from '../services/api'
 import axios from 'axios'
 
 const Register = () => {
@@ -41,14 +41,14 @@ const Register = () => {
 
     try {
       const response = await axios.post("http://localhost:5000/api/users/SignUp",
-         formData ,
-         {withCredentials:true}
+        formData,
+        { withCredentials: true }
       )
       console.log('Registration successful:', response)
       // Redirect to login after successful registration
       navigate('/login')
     } catch (err) {
-      setError(err.error || 'Registration failed. Please try again.')
+      setError(err.response?.data?.error || err.error || 'Registration failed. Please try again.')
       console.error('Registration error:', err)
     } finally {
       setLoading(false)
@@ -156,7 +156,6 @@ const Register = () => {
 
             <button
               type="submit"
-              onClick={() => navigate("/dashboard")}
               disabled={loading}
               className="w-48 mx-auto block rounded-full bg-[#f9f904] text-black font-semibold tracking-[0.18em] text-xs px-6 py-3 uppercase disabled:opacity-50 disabled:cursor-not-allowed"
             >

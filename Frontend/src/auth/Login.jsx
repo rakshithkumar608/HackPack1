@@ -4,7 +4,7 @@ import { authAPI } from '../services/api'
 import axios from 'axios'
 
 const Login = () => {
-   const navigate = useNavigate()
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -35,16 +35,22 @@ const Login = () => {
     try {
       console.log("triggerd")
       const response = await axios.post(
-         "http://localhost:5000/api/users/Login",
-         formData ,
-         {withCredentials:true}
-        );
+        "http://localhost:5000/api/users/Login",
+        formData,
+        { withCredentials: true }
+      );
 
       console.log('Login successful:', response)
-      // Redirect to profile after successful login
-      // navigate('/profile')
+
+      // Store user data in localStorage for reference
+      if (response.data.data) {
+        localStorage.setItem('user', JSON.stringify(response.data.data));
+      }
+
+      // Navigate to dashboard ONLY after successful login
+      navigate('/dashboard')
     } catch (err) {
-      setError(err.error || 'Login failed. Please check your credentials.')
+      setError(err.response?.data?.error || err.error || 'Login failed. Please check your credentials.')
       console.error('Login error:', err)
     } finally {
       setLoading(false)
@@ -136,7 +142,6 @@ const Login = () => {
 
             <button
               type="submit"
-              onClick={() => navigate("/dashboard")}
               disabled={loading}
               className="w-48 mx-auto block rounded-full bg-[#f9f904] text-black font-semibold tracking-[0.18em] text-xs px-6 py-3 uppercase disabled:opacity-50 disabled:cursor-not-allowed"
             >
