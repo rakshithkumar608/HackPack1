@@ -6,6 +6,7 @@ import Sidebar from "../layouts/Sidebar";
 import Chart from "../layouts/Chart";
 import PopupBox from "../pages/PopupBox";
 import LevelBadge from "./LevelBadge";
+import { ToastContainer, useToast } from "./XpToast";
 
 const STOCK_IDS = {
   "RELIANCE.BSE": "697cba312f464eddee194a8c",
@@ -25,6 +26,9 @@ const Dashboard = () => {
   const [availableBalance, setAvailableBalance] = useState(0);
   const [ownedShares, setOwnedShares] = useState(0);
   const [avgBuyPrice, setAvgBuyPrice] = useState(0);
+
+  // Toast notifications
+  const { toasts, addToast, removeToast } = useToast();
 
   const chartRef = useRef(null);
   const streamIndexRef = useRef(0);
@@ -195,9 +199,15 @@ const Dashboard = () => {
         }
       );
 
-      alert(
-        `✅ ${orderData.orderType.toUpperCase()} order placed!\n${orderData.quantity} units of ${orderData.stockName} @ ₹${orderData.price}\nNew Balance: ₹${response.data.newBalance?.toLocaleString("en-IN") || "N/A"}`
-      );
+      // Show XP notification
+      const xpEarned = response.data.xpAwarded || (orderData.orderType === "sell" ? 15 : 10);
+      const isProfitable = response.data.isProfitable;
+
+      if (isProfitable) {
+        addToast(`Profitable ${orderData.orderType.toUpperCase()}! 🎉`, xpEarned, "achievement");
+      } else {
+        addToast(`${orderData.orderType.toUpperCase()} order placed!`, xpEarned, "xp");
+      }
 
       // Refresh balance and holdings after order
       fetchBalance();
@@ -221,6 +231,9 @@ const Dashboard = () => {
 
   return (
     <div className="h-screen flex flex-col">
+      {/* XP Toast Notifications */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+
       <header className="h-16 bg-white border-b flex items-center justify-between px-6">
         <span className="text-xl font-semibold">
           <span className="font-bold">Stock</span>
