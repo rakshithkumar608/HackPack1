@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const userRoutes = require('./Routes/UserRoutes');
+const DataRoutes = require('./Routes/DataAccess');
 const mongoose = require('mongoose');
 const PORT = process.env.PORT || 5000;
 
@@ -19,18 +20,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-// MongoDB connection
-if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('MongoDB connected'))
-    .catch(err => console.log('MongoDB connection error:', err))
-} else {
-  console.log('WARNING: MONGODB_URI not found in .env file')
-}
-
-
 // Use routes with a base path
 app.use('/api/users', userRoutes);
+app.use('/api/trading', DataRoutes);
 
 
 app.get('/health', (req, res) => {
@@ -44,9 +36,24 @@ app.use((err, req, res, next) => {
 });
 
 
+// MongoDB connection and server startup
+const startServer = async () => {
+  try {
+    if (process.env.MONGODB_URI) {
+      await mongoose.connect(process.env.MONGODB_URI);
+      console.log('✅ MongoDB connected');
+    } else {
+      console.log('⚠️  WARNING: MONGODB_URI not found in .env file');
+    }
 
+    app.listen(PORT, () => {
+      console.log(`✅ Server is running on port ${PORT}`);
+      console.log(`Access: http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('❌ Failed to start server:', err);
+    process.exit(1);
+  }
+};
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Access: http://localhost:${PORT}`);
-});
+startServer();
