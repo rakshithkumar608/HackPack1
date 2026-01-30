@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 
 const LoginUser = async (req, res) => {
   try {
+    console.log("Triggerd!!")
     const { email, password } = req.body;
 
     // Validation
