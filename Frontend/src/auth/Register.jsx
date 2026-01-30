@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
  import { authAPI } from '../services/api'
 import axios from 'axios'
-
+import imgg1 from "../assets/imgg1.png"
 const Register = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
@@ -75,7 +75,7 @@ const Register = () => {
           <div className="w-full max-w-xl">
             {/* Replace src with your actual illustration */}
             <img
-              src=""
+              src={imgg1}
               alt="Trading simulator illustration"
               className="w-full h-auto object-contain"
             />
