@@ -14,9 +14,13 @@ app.use(cors({
   origin: [
     "http://localhost:5173",
     "http://localhost:3001",
+
     "http://localhost:3000"
+
+
+
   ],
-    credentials: true
+  credentials: true
 }));
 
 app.use(express.json());
@@ -28,6 +32,7 @@ app.use(cookieParser());
 app.use('/api/users', userRoutes);
 app.use('/api/trading', DataRoutes);
 app.use('/api/orders', OrderRoutes);
+
 
 
 app.get('/health', (req, res) => {
