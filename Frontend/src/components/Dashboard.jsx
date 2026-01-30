@@ -76,12 +76,10 @@ const Dashboard = () => {
         console.log("✅ Formatted chart points:", formatted.length);
         allPricesRef.current = formatted;
 
-        // Set initial data (first 10 points)
+        // Set initial data (first 10 points only)
         const initialData = formatted.slice(0, 10);
         setChartData(initialData);
         streamIndexRef.current = 10;
-
-        setChartData(formatted);
       } catch (err) {
         if (err.response) {
           setError(`Server error: ${err.response.status}`);
