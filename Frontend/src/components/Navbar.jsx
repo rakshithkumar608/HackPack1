@@ -13,8 +13,8 @@ const Navbar = () => {
             {/* <span className="text-white font-bold text-lg">i</span> */}
           </div>
           <span className="text-xl font-semibold tracking-tight">
-            <span className="font-bold">Stock</span>
-            <span className="text-blue-600 text-2xl font-bold">Learn</span>
+            <span className="font-bold">Trade</span>
+            <span className="text-blue-600 text-2xl font-bold">Reflex</span>
           </span>
         </div>
 
