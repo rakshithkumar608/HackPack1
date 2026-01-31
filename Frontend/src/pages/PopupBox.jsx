@@ -1,20 +1,49 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) => {
   const navigate = useNavigate();
 
-  const [step, setStep] = useState("confirm"); // "confirm" -> "reflection" -> "orderDetails"
+  const [step, setStep] = useState("confirm"); // "confirm" -> "reflection" -> "aiResponse" -> "orderDetails"
   const [intention, setIntention] = useState("");
-  const [quantity, setQuantity] = useState("");;
+  const [quantity, setQuantity] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
 
   const handleConfirm = () => setStep("reflection");
 
-  const handleReflectionNext = () => {
+  const handleReflectionNext = async () => {
     if (!intention.trim()) {
       alert("Please enter your intention");
       return;
     }
+
+    // Call AI chatbot API
+    setAiLoading(true);
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/ai/chat",
+        {
+          message: intention,
+          stockName: stockName,
+          orderType: orderType,
+          currentPrice: currentPrice
+        },
+        { withCredentials: true }
+      );
+      setAiResponse(response.data.response || response.data.message || "No response from AI");
+    } catch (error) {
+      console.error("AI API error:", error);
+      setAiResponse("Unable to get AI advice at the moment. You can still proceed with your order.");
+    } finally {
+      setAiLoading(false);
+    }
+
+    setStep("aiResponse");
+  };
+
+  const handleAiResponseNext = () => {
     setStep("orderDetails");
   };
 
@@ -104,15 +133,54 @@ const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) =>
               </button>
               <button
                 onClick={handleReflectionNext}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                disabled={aiLoading}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50"
               >
-                Next
+                {aiLoading ? "Loading..." : "Next"}
               </button>
             </div>
           </>
         )}
 
-        {/* Step 3: Order Details */}
+        {/* Step 3: AI Chatbot Response */}
+        {step === "aiResponse" && (
+          <>
+            <h2 className="text-xl font-bold mb-4 text-gray-800">
+              🤖 AI Advisor
+            </h2>
+
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200 max-h-60 overflow-y-auto">
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                {aiResponse}
+              </p>
+            </div>
+
+            <div className="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
+              <p className="text-xs text-gray-500 mb-1">Your Intention:</p>
+              <p className="text-sm text-gray-700 italic">"{intention}"</p>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleNo}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAiResponseNext}
+                className={`px-4 py-2 text-white rounded transition ${orderType === "buy"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-red-600 hover:bg-red-700"
+                  }`}
+              >
+                Proceed to {orderType === "buy" ? "Buy" : "Sell"}
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Step 4: Order Details */}
         {step === "orderDetails" && (
           <>
             <h2 className="text-xl font-bold mb-4 text-gray-800">
@@ -162,8 +230,8 @@ const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) =>
               <button
                 onClick={handleSubmit}
                 className={`px-4 py-2 text-white rounded transition ${orderType === "buy"
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-red-600 hover:bg-red-700"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-red-600 hover:bg-red-700"
                   }`}
               >
                 {orderType === "buy" ? "Buy" : "Sell"}
