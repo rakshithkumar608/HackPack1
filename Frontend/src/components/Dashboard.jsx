@@ -286,8 +286,8 @@ const Dashboard = () => {
 
             {/* Holdings & Balance Info Panel */}
             <div className="flex items-center gap-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
-                <div className="text-xs text-blue-600 font-medium">You Own</div>
+              <div className="bg-blue-100   rounded-lg px-4 py-2">
+                <div className="text-xs text-black font-medium">You Own</div>
                 <div className="text-lg font-bold text-blue-800">
                   {ownedShares} shares
                 </div>
@@ -298,7 +298,7 @@ const Dashboard = () => {
                 )}
               </div>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+              <div className="bg-green-100  rounded-lg px-4 py-2">
                 <div className="text-xs text-green-600 font-medium">Available</div>
                 <div className="text-lg font-bold text-green-800">
                   ₹{availableBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}

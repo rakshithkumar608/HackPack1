@@ -34,6 +34,7 @@ app.use('/api/trading', DataRoutes);
 app.use('/api/orders', OrderRoutes);
 app.use('/api/ai', require('./Routes/AIRoutes'));
 app.use('/api/gamification', require('./Routes/GamificationRoutes'));
+app.use('/api/watchlist', require('./Routes/WatchlistRoutes'));
 
 
 

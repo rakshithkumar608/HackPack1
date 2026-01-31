@@ -86,10 +86,10 @@ const Portfolio = () => {
                     {/* Portfolio Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         {/* Available Balance */}
-                        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-5 text-white">
+                        <div className="bg-green-400 rounded-lg  p-5 text-white">
                             <div className="flex items-center gap-2 mb-2">
-                                <Wallet size={20} />
-                                <span className="text-green-100 text-sm">Available Balance</span>
+                                
+                                <span className="text-green-100 text-xl text-black">Available Balance</span>
                             </div>
                             <p className="text-2xl font-bold">
                                 ₹{availableBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
@@ -97,10 +97,10 @@ const Portfolio = () => {
                         </div>
 
                         {/* Total Invested */}
-                        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-5 text-white">
+                        <div className="bg-blue-400 rounded-lg  p-5 text-white">
                             <div className="flex items-center gap-2 mb-2">
-                                <PieChart size={20} />
-                                <span className="text-blue-100 text-sm">Total Invested</span>
+                             
+                                <span className="text-blue-100 text-xl">Total Invested</span>
                             </div>
                             <p className="text-2xl font-bold">
                                 ₹{totalInvested.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
@@ -108,10 +108,10 @@ const Portfolio = () => {
                         </div>
 
                         {/* Total Portfolio */}
-                        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-5 text-white">
+                        <div className="bg-indigo-400 rounded-lg p-5 text-white">
                             <div className="flex items-center gap-2 mb-2">
-                                <TrendingUp size={20} />
-                                <span className="text-purple-100 text-sm">Portfolio Value</span>
+                                
+                                <span className="text-purple-100 text-xl">Portfolio Value</span>
                             </div>
                             <p className="text-2xl font-bold">
                                 ₹{totalPortfolioValue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
@@ -119,10 +119,10 @@ const Portfolio = () => {
                         </div>
 
                         {/* XP Card */}
-                        <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg shadow-lg p-5 text-white">
+                        <div className="rounded-lg bg-gray-500 p-5 text-white">
                             <div className="flex items-center gap-2 mb-2">
-                                <Star size={20} />
-                                <span className="text-yellow-100 text-sm">Your XP</span>
+                                
+                                <span className="text-yellow-100 text-xl">Your XP</span>
                             </div>
                             <p className="text-2xl font-bold">
                                 {xpStats?.xpPoints || 0} XP
@@ -131,7 +131,7 @@ const Portfolio = () => {
                                 <span>Level {xpStats?.level || 1}</span>
                                 {xpStats?.loginStreak > 0 && (
                                     <span className="flex items-center gap-1">
-                                        <Flame size={12} /> {xpStats.loginStreak} streak
+                                      streak  {xpStats.loginStreak} 
                                     </span>
                                 )}
                             </div>
@@ -155,7 +155,7 @@ const Portfolio = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Current Holdings */}
                         <div className="lg:col-span-2">
-                            <div className="bg-white rounded-lg shadow-md p-5 mb-6">
+                            <div className="bg-gray-200 rounded-lg  p-5 mb-6">
                                 <h2 className="text-xl font-bold text-gray-800 mb-4">Current Holdings</h2>
 
                                 {!loading && !error && holdings.length === 0 && (
@@ -206,9 +206,9 @@ const Portfolio = () => {
                             </div>
 
                             {/* XP & Achievements Section */}
-                            <div className="bg-white rounded-lg shadow-md p-5">
-                                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <Zap className="text-yellow-500" /> XP & Achievements
+                            <div className="bg-white rounded-lg  p-5">
+                                <h2 className="text-xl ml-1 font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                     XP & Achievements
                                 </h2>
                                 <LevelBadge compact={false} />
                             </div>
@@ -216,7 +216,7 @@ const Portfolio = () => {
 
                         {/* Recent Orders */}
                         <div className="lg:col-span-1">
-                            <div className="bg-white rounded-lg shadow-md p-5">
+                            <div className="bg-white rounded-lg  p-5">
                                 <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Orders</h2>
 
                                 {!loading && recentOrders.length === 0 && (
@@ -230,17 +230,17 @@ const Portfolio = () => {
                                             return (
                                                 <div
                                                     key={order.id}
-                                                    className={`p-3 rounded-lg border-l-4 ${isBuy
+                                                    className={`p-3 rounded-lg  ${isBuy
                                                         ? "bg-green-50 border-green-500"
                                                         : "bg-red-50 border-red-500"
                                                         }`}
                                                 >
                                                     <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-2 text-black">
                                                             {isBuy ? (
-                                                                <TrendingUp size={16} className="text-green-600" />
+                                                                <TrendingUp size={16} className="text-black" />
                                                             ) : (
-                                                                <TrendingDown size={16} className="text-red-600" />
+                                                                <TrendingDown size={16} className="text-black" />
                                                             )}
                                                             <span className={`font-semibold ${isBuy ? "text-green-700" : "text-red-700"}`}>
                                                                 {order.type}

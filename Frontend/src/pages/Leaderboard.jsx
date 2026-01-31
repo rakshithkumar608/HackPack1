@@ -73,19 +73,19 @@ const Leaderboard = () => {
                 <div className="max-w-3xl mx-auto">
                     {/* Title */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-full mb-4">
+                        <div className="inline-flex items-center justify-center gap-3 text-black px-6 py-3 rounded-full mb-4">
                             <Trophy size={28} />
                             <h1 className="text-2xl font-bold">Leaderboard</h1>
                         </div>
                         {userRank && (
-                            <p className="text-gray-600">Your Rank: <span className="font-bold text-purple-600">#{userRank}</span></p>
+                            <p className="text-gray-600">Your Rank: <span className="font-bold text-green-600">#{userRank}</span></p>
                         )}
                     </div>
 
                     {/* Loading */}
                     {loading && (
                         <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2  mx-auto"></div>
                             <p className="mt-4 text-gray-600">Loading leaderboard...</p>
                         </div>
                     )}
@@ -107,7 +107,7 @@ const Leaderboard = () => {
                                     <div className="flex-1">
                                         <h3 className="font-bold text-gray-800 text-lg">{player.name}</h3>
                                         <div className="flex items-center gap-2 text-sm text-gray-500">
-                                            <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                                            <span className="bg-gray-200 text-black px-2 py-0.5 rounded-full text-xs font-medium">
                                                 {player.levelName}
                                             </span>
                                             <span>Level {player.level}</span>
@@ -118,7 +118,7 @@ const Leaderboard = () => {
 
                                     {/* XP */}
                                     <div className="text-right">
-                                        <div className="flex items-center gap-1 text-yellow-600">
+                                        <div className="flex items-center gap-1 text-orange-300">
                                             <Star size={16} fill="currentColor" />
                                             <span className="font-bold text-lg">{player.xpPoints.toLocaleString()}</span>
                                         </div>
