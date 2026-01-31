@@ -10,6 +10,7 @@ const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) =>
   const [quantity, setQuantity] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [isSound, setIsSound] = useState(false);
 
   const handleConfirm = () => setStep("reflection");
 
@@ -33,6 +34,7 @@ const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) =>
         { withCredentials: true }
       );
       setAiResponse(response.data.response || response.data.message || "No response from AI");
+      setIsSound(response.data.isSound || false);
     } catch (error) {
       console.error("AI API error:", error);
       setAiResponse("Unable to get AI advice at the moment. You can still proceed with your order.");
@@ -145,11 +147,21 @@ const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) =>
         {/* Step 3: AI Chatbot Response */}
         {step === "aiResponse" && (
           <>
-            <h2 className="text-xl font-bold mb-4 text-gray-800">
-              🤖 AI Advisor
-            </h2>
+            <div className="flex items-center gap-2 mb-4">
+              <h2 className="text-xl font-bold text-gray-800">
+                🤖 AI Advisor
+              </h2>
+              {isSound ? (
+                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">✓ Sound Reasoning</span>
+              ) : (
+                <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded">⚠ Needs Reflection</span>
+              )}
+            </div>
 
-            <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200 max-h-60 overflow-y-auto">
+            <div className={`mb-4 p-4 rounded-lg border max-h-60 overflow-y-auto ${isSound
+                ? 'bg-green-50 border-green-300'
+                : 'bg-red-50 border-red-300'
+              }`}>
               <p className="text-sm text-gray-700 whitespace-pre-wrap">
                 {aiResponse}
               </p>
@@ -170,8 +182,8 @@ const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) =>
               <button
                 onClick={handleAiResponseNext}
                 className={`px-4 py-2 text-white rounded transition ${orderType === "buy"
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-red-600 hover:bg-red-700"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-red-600 hover:bg-red-700"
                   }`}
               >
                 Proceed to {orderType === "buy" ? "Buy" : "Sell"}
