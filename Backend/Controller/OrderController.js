@@ -6,7 +6,7 @@ const { awardXp, checkAchievements, getOrCreateXpProfile, XP_VALUES } = require(
 const buyOrder = async (req, res) => {
   try {
     const { symbol, orderQuantity, price } = req.body;
-    const userId = req.user._id; // From auth middleware
+    const userId = req.user._id; 
 
     if (!symbol || !orderQuantity || !price) {
       return res.status(400).json({ message: 'symbol, orderQuantity and price are required' });
@@ -17,14 +17,11 @@ const buyOrder = async (req, res) => {
     if (!Number.isFinite(qty) || qty <= 0) return res.status(400).json({ message: 'orderQuantity must be a positive number' });
     if (!Number.isFinite(pr) || pr < 0) return res.status(400).json({ message: 'price must be a non-negative number' });
 
-    // Calculate total cost
     const totalCost = qty * pr;
 
-    // Get user (already verified by middleware, but need fresh data for balance)
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Check if user has sufficient balance
     const currentBalance = user.availableBalance || 0;
     if (currentBalance < totalCost) {
       return res.status(400).json({ 

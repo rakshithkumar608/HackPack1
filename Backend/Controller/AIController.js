@@ -83,7 +83,6 @@ Keep each point concise (under 15 words). Return ONLY valid JSON, no markdown.`;
   }
 };
 
-// Static fallback analysis
 function getStaticAnalysis(symbol) {
   const staticData = {
     'RELIANCE.BSE': {
@@ -132,7 +131,6 @@ function getStaticAnalysis(symbol) {
   };
 }
 
-// Behavioral Analysis for Trading Intentions
 const behavioralAnalysis = async (req, res) => {
   try {
     const { message, stockName, orderType, currentPrice } = req.body;
@@ -208,7 +206,6 @@ User's intention: "${message}"`;
       const response = await result.response;
       let text = response.text();
 
-      // Extract soundness assessment
       let isSound = false;
       if (text.includes('ASSESSMENT: SOUND')) {
         isSound = true;
@@ -239,7 +236,6 @@ User's intention: "${message}"`;
   }
 };
 
-// Static fallback for behavioral analysis
 function getStaticBehavioralResponse(intention, orderType) {
   const action = orderType === 'buy' ? 'purchasing' : 'selling';
   

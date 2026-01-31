@@ -2,17 +2,15 @@ const Xp = require('../Schemas/XpSchema');
 const User = require('../Schemas/UserSchema');
 const Order = require('../Schemas/OrderSchema');
 
-// XP values for actions
 const XP_VALUES = {
   LOGIN: 10,
-  LOGIN_STREAK_BONUS: 5,  // Per day streak
+  LOGIN_STREAK_BONUS: 5, 
   BUY_ORDER: 10,
   SELL_ORDER: 15,
   PROFITABLE_TRADE: 25,
   FIRST_TRADE_OF_DAY: 20
 };
 
-// Achievement definitions
 const ACHIEVEMENTS = {
   FIRST_TRADE: {
     id: 'first_trade',
@@ -86,7 +84,6 @@ const ACHIEVEMENTS = {
   }
 };
 
-// Get or create XP profile for user
 const getOrCreateXpProfile = async (userId) => {
   let xpProfile = await Xp.findOne({ userId });
   
@@ -94,14 +91,12 @@ const getOrCreateXpProfile = async (userId) => {
     xpProfile = new Xp({ userId });
     await xpProfile.save();
     
-    // Link to user
     await User.findByIdAndUpdate(userId, { xpProfile: xpProfile._id });
   }
   
   return xpProfile;
 };
 
-// Award XP to user
 const awardXp = async (userId, amount, reason) => {
   const xpProfile = await getOrCreateXpProfile(userId);
   xpProfile.xpPoints += amount;
@@ -110,7 +105,6 @@ const awardXp = async (userId, amount, reason) => {
   return xpProfile;
 };
 
-// Handle daily login XP
 const handleLoginXp = async (userId) => {
   const xpProfile = await getOrCreateXpProfile(userId);
   const today = new Date();
@@ -120,20 +114,16 @@ const handleLoginXp = async (userId) => {
   let xpAwarded = 0;
   
   if (!lastLogin || lastLogin < today) {
-    // First login today
     xpAwarded += XP_VALUES.LOGIN;
     
-    // Check streak
     if (lastLogin) {
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       
       if (lastLogin >= yesterday) {
-        // Continued streak
         xpProfile.loginStreak += 1;
         xpAwarded += XP_VALUES.LOGIN_STREAK_BONUS * Math.min(xpProfile.loginStreak, 7);
       } else {
-        // Streak broken
         xpProfile.loginStreak = 1;
       }
     } else {
@@ -145,19 +135,16 @@ const handleLoginXp = async (userId) => {
     xpProfile.behavior_history.push(`+${xpAwarded} XP: Daily login (streak: ${xpProfile.loginStreak})`);
     await xpProfile.save();
     
-    // Check for new achievements
     await checkAchievements(userId);
   }
   
   return { xpAwarded, streak: xpProfile.loginStreak, totalXp: xpProfile.xpPoints };
 };
 
-// Check and unlock achievements
 const checkAchievements = async (userId) => {
   const xpProfile = await getOrCreateXpProfile(userId);
   const user = await User.findById(userId);
   
-  // Get user stats
   const orders = await Order.find({ userId });
   const uniqueStocks = new Set(orders.map(o => o.symbol)).size;
   const maxTradeAmount = orders.length > 0 ? Math.max(...orders.map(o => o.totalAmount)) : 0;
@@ -186,7 +173,6 @@ const checkAchievements = async (userId) => {
       xpProfile.achievements.push(newAchievement);
       newAchievements.push(newAchievement);
       
-      // Award bonus XP for achievement
       xpProfile.xpPoints += 50;
       xpProfile.behavior_history.push(`+50 XP: Unlocked achievement "${achievement.name}"`);
     }
@@ -199,18 +185,15 @@ const checkAchievements = async (userId) => {
   return newAchievements;
 };
 
-// Get user gamification stats
 const getStats = async (req, res) => {
   try {
     const userId = req.user._id;
     const xpProfile = await getOrCreateXpProfile(userId);
     const user = await User.findById(userId);
     
-    // Get order stats
     const orders = await Order.find({ userId });
     const uniqueStocks = new Set(orders.map(o => o.symbol)).size;
     
-    // Calculate XP to next level
     const currentLevelXp = (xpProfile.level - 1) * 100;
     const nextLevelXp = xpProfile.level * 100;
     const xpProgress = xpProfile.xpPoints - currentLevelXp;
@@ -239,7 +222,6 @@ const getStats = async (req, res) => {
   }
 };
 
-// Get leaderboard
 const getLeaderboard = async (req, res) => {
   try {
     const leaderboard = await Xp.find()
@@ -256,7 +238,6 @@ const getLeaderboard = async (req, res) => {
       achievements: entry.achievements.length
     }));
     
-    // Get current user's rank
     let userRank = null;
     if (req.user) {
       const userXp = await Xp.findOne({ userId: req.user._id });
