@@ -1,0 +1,76 @@
+require('dotenv').config()
+const express = require('express');
+const cors = require('cors');
+const app = express();
+const userRoutes = require('./Routes/UserRoutes');
+const DataRoutes = require('./Routes/DataAccess');
+const OrderRoutes = require('./Routes/OrderRoutes');
+const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:3001",
+
+    "http://localhost:3000"
+
+
+
+  ],
+  credentials: true
+}));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+
+// Use routes with a base path
+app.use('/api/users', userRoutes);
+app.use('/api/trading', DataRoutes);
+app.use('/api/orders', OrderRoutes);
+
+
+
+app.get('/health', (req, res) => {
+  res.json({ message: 'Server is running' });
+});
+
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Internal Server Error', message: err.message });
+});
+
+
+// MongoDB connection and server startup
+const startServer = async () => {
+  try {
+    if (process.env.MONGODB_URI) {
+      try {
+        await mongoose.connect(process.env.MONGODB_URI, {
+          serverSelectionTimeoutMS: 3000
+        });
+        console.log('✅ MongoDB connected');
+      } catch (err) {
+        console.log('⚠️  MongoDB not available, continuing WITHOUT database');
+      }
+    } else {
+      console.log('⚠️  MONGODB_URI not set, running WITHOUT database');
+    }
+
+    app.listen(PORT, () => {
+      console.log(`✅ Server is running on port ${PORT}`);
+      console.log(`Access: http://localhost:${PORT}`);
+    });
+
+  } catch (err) {
+    console.error('❌ Failed to start server:', err);
+    process.exit(1);
+  }
+};
+
+startServer();
