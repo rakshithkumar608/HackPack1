@@ -18,4 +18,7 @@ router.get('/holding/:symbol', protect, OrderController.getHolding);
 // GET /api/orders/portfolio - Protected route, gets userId from cookie
 router.get('/portfolio', protect, OrderController.getPortfolio);
 
+// GET /api/orders/portfolio/live - Get portfolio with current market prices
+router.get('/portfolio/live', protect, OrderController.getLivePortfolio);
+
 module.exports = router;

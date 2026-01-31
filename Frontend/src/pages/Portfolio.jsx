@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Home, BellIcon, UserCircleIcon, TrendingUp, TrendingDown, Wallet, PieChart, Star, Trophy, Flame, Zap } from "lucide-react";
+import { Home, BellIcon, UserCircleIcon, TrendingUp, TrendingDown, Wallet, PieChart, Star, Trophy, Flame, Zap, RefreshCw } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import LevelBadge from "../components/LevelBadge";
 
@@ -14,6 +14,8 @@ const Portfolio = () => {
     const [xpStats, setXpStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [liveData, setLiveData] = useState(null);
+    const [loadingLive, setLoadingLive] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -53,8 +55,25 @@ const Portfolio = () => {
         fetchData();
     }, []);
 
+    // Fetch live portfolio values
+    const fetchLiveData = async () => {
+        try {
+            setLoadingLive(true);
+            const response = await axios.get(
+                "http://localhost:5000/api/orders/portfolio/live",
+                { withCredentials: true }
+            );
+            setLiveData(response.data);
+        } catch (err) {
+            console.error("Error fetching live data:", err);
+            alert("Failed to fetch live prices");
+        } finally {
+            setLoadingLive(false);
+        }
+    };
+
     const { availableBalance, totalInvested, holdings, recentOrders } = portfolioData;
-    const totalPortfolioValue = availableBalance + totalInvested;
+    const totalPortfolioValue = liveData ? liveData.totalPortfolioValue : (availableBalance + totalInvested);
 
     return (
         <div className="h-screen flex flex-col bg-gray-100">
@@ -88,7 +107,7 @@ const Portfolio = () => {
                         {/* Available Balance */}
                         <div className="bg-green-400 rounded-lg  p-5 text-white">
                             <div className="flex items-center gap-2 mb-2">
-                                
+
                                 <span className="text-green-100 text-xl text-black">Available Balance</span>
                             </div>
                             <p className="text-2xl font-bold">
@@ -99,7 +118,7 @@ const Portfolio = () => {
                         {/* Total Invested */}
                         <div className="bg-blue-400 rounded-lg  p-5 text-white">
                             <div className="flex items-center gap-2 mb-2">
-                             
+
                                 <span className="text-blue-100 text-xl">Total Invested</span>
                             </div>
                             <p className="text-2xl font-bold">
@@ -110,7 +129,7 @@ const Portfolio = () => {
                         {/* Total Portfolio */}
                         <div className="bg-indigo-400 rounded-lg p-5 text-white">
                             <div className="flex items-center gap-2 mb-2">
-                                
+
                                 <span className="text-purple-100 text-xl">Portfolio Value</span>
                             </div>
                             <p className="text-2xl font-bold">
@@ -121,7 +140,7 @@ const Portfolio = () => {
                         {/* XP Card */}
                         <div className="rounded-lg bg-gray-500 p-5 text-white">
                             <div className="flex items-center gap-2 mb-2">
-                                
+
                                 <span className="text-yellow-100 text-xl">Your XP</span>
                             </div>
                             <p className="text-2xl font-bold">
@@ -131,7 +150,7 @@ const Portfolio = () => {
                                 <span>Level {xpStats?.level || 1}</span>
                                 {xpStats?.loginStreak > 0 && (
                                     <span className="flex items-center gap-1">
-                                      streak  {xpStats.loginStreak} 
+                                        streak  {xpStats.loginStreak}
                                     </span>
                                 )}
                             </div>
@@ -155,8 +174,41 @@ const Portfolio = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Current Holdings */}
                         <div className="lg:col-span-2">
-                            <div className="bg-gray-200 rounded-lg  p-5 mb-6">
-                                <h2 className="text-xl font-bold text-gray-800 mb-4">Current Holdings</h2>
+                            <div className="bg-gray-200 rounded-lg p-5 mb-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-xl font-bold text-gray-800">Current Holdings</h2>
+                                    <button
+                                        onClick={fetchLiveData}
+                                        disabled={loadingLive}
+                                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                    >
+                                        <RefreshCw size={14} className={loadingLive ? "animate-spin" : ""} />
+                                        {loadingLive ? "Loading..." : "Get Live Values"}
+                                    </button>
+                                </div>
+
+                                {/* Live Summary Banner */}
+                                {liveData && (
+                                    <div className={`mb-4 p-3 rounded-lg ${liveData.totalProfitLoss >= 0 ? 'bg-green-100 border border-green-300' : 'bg-red-100 border border-red-300'}`}>
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <span className="text-sm text-gray-600">Current Market Value:</span>
+                                                <p className="text-xl font-bold text-gray-800">
+                                                    ₹{liveData.totalCurrentValue?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-sm text-gray-600">P&L:</span>
+                                                <p className={`text-xl font-bold flex items-center gap-1 ${liveData.totalProfitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                    {liveData.totalProfitLoss >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
+                                                    {liveData.totalProfitLoss >= 0 ? '+' : ''}₹{liveData.totalProfitLoss?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                                    <span className="text-sm">({liveData.totalProfitLoss >= 0 ? '+' : ''}{liveData.totalProfitLossPercent?.toFixed(2)}%)</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">Last updated: {new Date(liveData.lastUpdated).toLocaleTimeString()}</p>
+                                    </div>
+                                )}
 
                                 {!loading && !error && holdings.length === 0 && (
                                     <div className="text-center py-8">
@@ -172,43 +224,62 @@ const Portfolio = () => {
 
                                 {!loading && !error && holdings.length > 0 && (
                                     <div className="space-y-4">
-                                        {holdings.map((holding) => (
-                                            <div
-                                                key={holding.symbol}
-                                                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                                            <span className="text-blue-600 font-bold text-sm">
-                                                                {holding.symbol.slice(0, 3)}
-                                                            </span>
+                                        {(liveData ? liveData.holdings : holdings).map((holding) => {
+                                            const hasLive = liveData && holding.currentPrice;
+                                            return (
+                                                <div
+                                                    key={holding.symbol}
+                                                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                                                <span className="text-blue-600 font-bold text-sm">
+                                                                    {holding.symbol.slice(0, 3)}
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <h3 className="font-semibold text-gray-800">{holding.symbol}</h3>
+                                                                <p className="text-sm text-gray-500">{holding.quantity || holding.totalQuantity} shares</p>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <h3 className="font-semibold text-gray-800">{holding.symbol}</h3>
-                                                            <p className="text-sm text-gray-500">{holding.totalQuantity} shares</p>
-                                                        </div>
-                                                    </div>
 
-                                                    <div className="text-right">
-                                                        <p className="font-bold text-gray-800">
-                                                            ₹{(holding.netInvested || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                                                        </p>
-                                                        <p className="text-sm text-gray-500">
-                                                            Avg: ₹{(holding.avgBuyPrice || 0).toFixed(2)}
-                                                        </p>
+                                                        {hasLive ? (
+                                                            <div className="text-right">
+                                                                <p className="font-bold text-gray-800">
+                                                                    ₹{holding.currentValue?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                                                </p>
+                                                                <p className="text-sm text-gray-500">
+                                                                    LTP: ₹{holding.currentPrice?.toFixed(2)}
+                                                                </p>
+                                                                <p className={`text-sm font-semibold flex items-center justify-end gap-1 ${holding.isProfit ? 'text-green-600' : 'text-red-600'}`}>
+                                                                    {holding.isProfit ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                                                                    {holding.isProfit ? '+' : ''}₹{holding.profitLoss?.toFixed(2)}
+                                                                    ({holding.isProfit ? '+' : ''}{holding.profitLossPercent?.toFixed(2)}%)
+                                                                </p>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-right">
+                                                                <p className="font-bold text-gray-800">
+                                                                    ₹{(holding.netInvested || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                                                </p>
+                                                                <p className="text-sm text-gray-500">
+                                                                    Avg: ₹{(holding.avgBuyPrice || 0).toFixed(2)}
+                                                                </p>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
 
                             {/* XP & Achievements Section */}
-                            <div className="bg-white rounded-lg  p-5">
+                            <div className="bg-white rounded-lg p-5">
                                 <h2 className="text-xl ml-1 font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                     XP & Achievements
+                                    XP & Achievements
                                 </h2>
                                 <LevelBadge compact={false} />
                             </div>
@@ -216,7 +287,7 @@ const Portfolio = () => {
 
                         {/* Recent Orders */}
                         <div className="lg:col-span-1">
-                            <div className="bg-white rounded-lg  p-5">
+                            <div className="bg-white rounded-lg p-5">
                                 <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Orders</h2>
 
                                 {!loading && recentOrders.length === 0 && (
@@ -230,7 +301,7 @@ const Portfolio = () => {
                                             return (
                                                 <div
                                                     key={order.id}
-                                                    className={`p-3 rounded-lg  ${isBuy
+                                                    className={`p-3 rounded-lg ${isBuy
                                                         ? "bg-green-50 border-green-500"
                                                         : "bg-red-50 border-red-500"
                                                         }`}
@@ -279,3 +350,4 @@ const Portfolio = () => {
 };
 
 export default Portfolio;
+

@@ -330,10 +330,117 @@ const getPortfolio = async (req, res) => {
   }
 };
 
+// Mock current prices (same as WatchlistController)
+const getMockPrice = (symbol) => {
+  const mockPrices = {
+    'RELIANCE.BSE': 2450.50 + (Math.random() - 0.5) * 100,
+    'TCS.BSE': 3890.25 + (Math.random() - 0.5) * 150,
+    'HDFCBANK.BSE': 1650.80 + (Math.random() - 0.5) * 80,
+    'ICICIBANK.BSE': 1125.60 + (Math.random() - 0.5) * 50,
+    'SBIN.BSE': 785.40 + (Math.random() - 0.5) * 40,
+    'INFY.BSE': 1580.00 + (Math.random() - 0.5) * 70,
+    'WIPRO.BSE': 425.30 + (Math.random() - 0.5) * 20,
+    'BHARTIARTL.BSE': 1450.75 + (Math.random() - 0.5) * 60,
+  };
+  return mockPrices[symbol] || 1000 + Math.random() * 500;
+};
+
+// Get live portfolio valuation with current market prices
+const getLivePortfolio = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Get all orders for this user
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+
+    // Build holdings map
+    const holdings = {};
+    orders.forEach(order => {
+      if (!holdings[order.symbol]) {
+        holdings[order.symbol] = {
+          symbol: order.symbol,
+          totalQuantity: 0,
+          totalBuyAmount: 0,
+          buyCount: 0,
+          avgBuyPrice: 0
+        };
+      }
+
+      const h = holdings[order.symbol];
+      if (order.orderType === 'BUY') {
+        h.totalQuantity += order.orderQuantity;
+        h.totalBuyAmount += order.totalAmount;
+        h.buyCount += order.orderQuantity;
+      } else if (order.orderType === 'SELL') {
+        h.totalQuantity -= order.orderQuantity;
+      }
+    });
+
+    // Calculate current values for holdings with quantity > 0
+    const liveHoldings = [];
+    let totalInvested = 0;
+    let totalCurrentValue = 0;
+    let totalProfitLoss = 0;
+
+    Object.values(holdings).forEach(h => {
+      if (h.totalQuantity > 0) {
+        // Calculate average buy price
+        h.avgBuyPrice = h.buyCount > 0 ? h.totalBuyAmount / h.buyCount : 0;
+        
+        // Get current market price
+        const currentPrice = getMockPrice(h.symbol);
+        
+        // Calculate values
+        const invested = h.avgBuyPrice * h.totalQuantity;
+        const currentValue = currentPrice * h.totalQuantity;
+        const profitLoss = currentValue - invested;
+        const profitLossPercent = invested > 0 ? (profitLoss / invested) * 100 : 0;
+
+        liveHoldings.push({
+          symbol: h.symbol,
+          quantity: h.totalQuantity,
+          avgBuyPrice: h.avgBuyPrice,
+          currentPrice: currentPrice,
+          invested: invested,
+          currentValue: currentValue,
+          profitLoss: profitLoss,
+          profitLossPercent: profitLossPercent,
+          isProfit: profitLoss >= 0
+        });
+
+        totalInvested += invested;
+        totalCurrentValue += currentValue;
+        totalProfitLoss += profitLoss;
+      }
+    });
+
+    const totalProfitLossPercent = totalInvested > 0 ? (totalProfitLoss / totalInvested) * 100 : 0;
+
+    return res.status(200).json({
+      success: true,
+      availableBalance: user.availableBalance || 100000,
+      totalInvested: totalInvested,
+      totalCurrentValue: totalCurrentValue,
+      totalProfitLoss: totalProfitLoss,
+      totalProfitLossPercent: totalProfitLossPercent,
+      totalPortfolioValue: (user.availableBalance || 100000) + totalCurrentValue,
+      holdings: liveHoldings,
+      lastUpdated: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('getLivePortfolio error:', err);
+    return res.status(500).json({ message: 'Server error', details: err.message });
+  }
+};
+
 module.exports = {
   buyOrder,
   sellOrder,
   getBalance,
   getHolding,
   getPortfolio,
+  getLivePortfolio,
 };
