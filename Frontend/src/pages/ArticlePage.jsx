@@ -17,18 +17,40 @@ const ArticlePage = ({ selectedStock }) => {
       try {
         setLoading(true);
         setError(null);
-        const response = await axios.get(
-          `http://localhost:5000/api/ai/analysis/${selectedStock}`,
-          { withCredentials: true }
+
+        // Fetch from Python chatbot
+        const response = await axios.post(
+          "http://127.0.0.1:8000/company_news",
+          { company: selectedStock }
         );
-        setAnalysis(response.data.analysis);
+
+        // Map the response to match the expected format
+        setAnalysis({
+          company: response.data.title || selectedStock,
+          latestNews: response.data.summary || "No recent news available",
+          sentiment: response.data.sentiment, // 1 = positive, 0 = negative
+          // Generate pros/cons based on sentiment
+          pros: response.data.sentiment === 1
+            ? ["Positive market sentiment", "Strong business outlook", "Growth potential"]
+            : ["Market presence", "Industry position"],
+          cons: response.data.sentiment === 0
+            ? ["Market volatility", "Regulatory concerns", "Competition risks"]
+            : ["Standard market risks"],
+          recommendation: response.data.sentiment === 1
+            ? "Based on current market analysis, this stock shows positive indicators."
+            : "Exercise caution and conduct thorough research before investing."
+        });
       } catch (err) {
         console.error("Error fetching analysis:", err);
-        setError("Failed to load analysis");
-        // Use fallback from error response if available
-        if (err.response?.data?.analysis) {
-          setAnalysis(err.response.data.analysis);
-        }
+        setError("Failed to load analysis from chatbot");
+        // Fallback data
+        setAnalysis({
+          company: selectedStock,
+          latestNews: "Unable to fetch latest news. Please try again.",
+          pros: ["Market presence"],
+          cons: ["Data unavailable"],
+          recommendation: "Please ensure the AI chatbot server is running."
+        });
       } finally {
         setLoading(false);
       }

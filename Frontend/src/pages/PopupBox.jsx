@@ -1,13 +1,17 @@
+import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) => {
   const navigate = useNavigate();
 
   const [step, setStep] = useState("confirm"); // "confirm" -> "reflection" -> "aiResponse" -> "orderDetails"
   const [intention, setIntention] = useState("");
-  const [quantity, setQuantity] = useState("");;
+  const [quantity, setQuantity] = useState("");
+
+  // AI Response state
+  const [aiResponse, setAiResponse] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const handleConfirm = () => setStep("reflection");
 
@@ -17,21 +21,34 @@ const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) =>
       return;
     }
 
+    setAiLoading(true);
     try {
-      const res = await axios.post("http://127.0.0.1:8000/reflection_check", {
+      const res = await axios.post("http://127.0.0.1:8000/pre_trade_check", {
+        session_id: "user_session",
         company: stockName,
-        reasoning: intention
+        user_reasoning: intention
       });
 
-      // 👇 ONLY judgement is visible
-      alert(`Judgement: ${res.data.judgement_message}`);
+      setAiResponse({
+        verdict: res.data.verdict,
+        xpAwarded: res.data.xp_awarded,
+        judgementMessage: res.data.judgement_message,
+        companyNews: res.data.company_news
+      });
 
-      setStep("orderDetails");
+      setStep("aiResponse");
     } catch (err) {
       console.error(err);
       alert("Reflection analysis failed. Try again.");
+    } finally {
+      setAiLoading(false);
     }
   };
+
+  const handleAiResponseNext = () => {
+    setStep("orderDetails");
+  };
+
 
 
   const handleNo = () => {
@@ -64,7 +81,7 @@ const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) =>
   return (
     <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-        {/* Step 1: Intention Box */}
+
         {step === "confirm" && (
           <>
             <h2 className="text-xl font-bold mb-4 text-gray-800">
@@ -91,7 +108,7 @@ const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) =>
           </>
         )}
 
-        {/* Step 2: Reflection Section */}
+
         {step === "reflection" && (
           <>
             <h2 className="text-xl font-bold mb-4 text-gray-800">
@@ -120,15 +137,90 @@ const PopupBox = ({ stockName, orderType, currentPrice, onClose, onConfirm }) =>
               </button>
               <button
                 onClick={handleReflectionNext}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                disabled={aiLoading}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50"
               >
-                Next
+                {aiLoading ? "Analyzing..." : "Next"}
               </button>
             </div>
           </>
         )}
 
-        {/* Step 4: Order Details */}
+        {step === "aiResponse" && aiResponse && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-xl shadow-2xl w-[420px] overflow-hidden animate-fadeIn">
+              {/* Chat Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 flex items-center gap-3">
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-xl">🤖</span>
+                </div>
+                <div>
+                  <h3 className="text-white font-bold">AI Trading Advisor</h3>
+                  <p className="text-blue-100 text-xs">Analysis Complete</p>
+                </div>
+              </div>
+
+              {/* Chat Body */}
+              <div className="p-4 max-h-[400px] overflow-y-auto bg-gray-50">
+                {/* User Message Bubble */}
+                <div className="flex justify-end mb-3">
+                  <div className="bg-blue-600 text-white px-4 py-2 rounded-2xl rounded-br-sm max-w-[80%]">
+                    <p className="text-sm">{intention}</p>
+                  </div>
+                </div>
+
+                {/* AI Response Bubble */}
+                <div className="flex justify-start mb-3">
+                  <div className="bg-white border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-sm max-w-[90%] shadow-sm">
+                    {/* Verdict Badge */}
+                    <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mb-2 ${aiResponse.verdict === "good" ? "bg-green-100 text-green-800" :
+                        aiResponse.verdict === "risky" ? "bg-yellow-100 text-yellow-800" :
+                          "bg-red-100 text-red-800"
+                      }`}>
+                      {aiResponse.verdict.toUpperCase()}
+                    </div>
+
+                    {/* XP */}
+                    <div className="flex items-center gap-1 mb-2">
+                      <span>⭐</span>
+                      <span className="text-sm font-bold text-blue-600">+{aiResponse.xpAwarded} XP earned!</span>
+                    </div>
+
+                    {/* Feedback */}
+                    <p className="text-sm text-gray-700 mb-3">{aiResponse.judgementMessage}</p>
+
+                    {/* News Section */}
+                    <div className="bg-gray-100 rounded-lg p-3 mt-2">
+                      <p className="text-xs text-gray-500 font-semibold mb-1">📰 Market News</p>
+                      <p className="text-sm text-gray-700">{aiResponse.companyNews}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat Footer - Action Buttons */}
+              <div className="px-4 py-3 bg-white border-t flex gap-3 justify-end">
+                <button
+                  onClick={handleNo}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAiResponseNext}
+                  className={`px-5 py-2 text-white rounded-lg transition font-semibold ${orderType === "buy"
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-red-600 hover:bg-red-700"
+                    }`}
+                >
+                  {orderType === "buy" ? "📈 Proceed to Buy" : "📉 Proceed to Sell"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
         {step === "orderDetails" && (
           <>
             <h2 className="text-xl font-bold mb-4 text-gray-800">
