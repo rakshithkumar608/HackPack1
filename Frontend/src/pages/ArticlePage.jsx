@@ -18,18 +18,16 @@ const ArticlePage = ({ selectedStock }) => {
         setLoading(true);
         setError(null);
 
-        // Fetch from Python chatbot
         const response = await axios.post(
           "http://127.0.0.1:8000/company_news",
           { company: selectedStock }
         );
 
-        // Map the response to match the expected format
+
         setAnalysis({
           company: response.data.title || selectedStock,
           latestNews: response.data.summary || "No recent news available",
-          sentiment: response.data.sentiment, // 1 = positive, 0 = negative
-          // Generate pros/cons based on sentiment
+          sentiment: response.data.sentiment,
           pros: response.data.sentiment === 1
             ? ["Positive market sentiment", "Strong business outlook", "Growth potential"]
             : ["Market presence", "Industry position"],
@@ -43,7 +41,7 @@ const ArticlePage = ({ selectedStock }) => {
       } catch (err) {
         console.error("Error fetching analysis:", err);
         setError("Failed to load analysis from chatbot");
-        // Fallback data
+
         setAnalysis({
           company: selectedStock,
           latestNews: "Unable to fetch latest news. Please try again.",
